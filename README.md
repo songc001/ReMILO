@@ -34,25 +34,25 @@ ReMILO is under the [Artistic License 2.0](http://opensource.org/licenses/Artist
    * Corresponding paired-end short reads in FASTA format.
    * Corresponding long reads in FASTA format (optional).
 
-4. Using AlignGraph
+4. Using ReMILO
 
    ```
    runReMILO.py contigs.fa reference_genome.fa short_reads1.fa short_reads2.fa [-options | -options]
    ```
 
-   Options (default value):    
-   -i/-insert n (500)
-   Insert length of short reads.
+   Options (default value):  
+   -i/-insert n (500)  
+   Insert length of short reads.  
    -k/-kmer n (19)  
-   Size of k bases.
-   -d/-distance n (85) 
-   Minimum alignment distance of adjacent contig positions to detect a misassembly error (with either reference genome or long reads).
-   -l/-longread long_reads.fa (yes)
-   Corresponding long reads.
-   -c/-coverage n (1)
+   Size of k bases.  
+   -d/-distance n (85)  
+   Minimum alignment distance of adjacent contig positions to detect a misassembly error (with either reference genome or long reads).  
+   -l/-longread long_reads.fa (yes)  
+   Corresponding long reads.  
+   -c/-coverage n (1)  
    Minimum number of long reads required to detect a misassembly error.
 
 5. Outputs
-   * Misassembly locations. Each line of the file records the misassembly locations of one contig and has the following format: `initial contig name : offset of first misassembly error; offset of second misassembly error ; ...`.
+   * Misassembly locations. Each line of the file records the misassembly locations of one contig and has the following format : `initial contig name : offset of first misassembly error; offset of second misassembly error ; ...`.
    * Split contigs at misassembly locations. Specification of each split contig has the following format: `initial contig name : split contig ID`, where the split contig ID starts from 0.
    * Remaining contigs without detected misassembly locations. 
