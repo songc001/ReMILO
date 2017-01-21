@@ -30,7 +30,7 @@ short_read1_path=args.short_read1_path
 short_read2_path=args.short_read2_path
 
 if args.insert:
-        if args.insert > 128 or args.insert < 1:
+        if args.insert > 65535 or args.insert < 1:
         	print 'ERROR: argument -i/insert  should be within 1 to 128'
         	exit(-1)
 if args.kmer > 127 or args.kmer < 4:
