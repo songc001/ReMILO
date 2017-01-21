@@ -137,6 +137,14 @@ if err !=0:
       exit(-1)
 print '\n'
 
+short_command = ' shortread  ' + output_dir + '/short/aln/read1.sam'  + ' ' + output_dir + '/short/aln/read2.sam' + ' ' + output_dir + '/short/ref_mis' 
+short_command+= ' ' + output_dir + '/short/splitcontig'
+print 'Running command: ' + short_command
+err = os.system(short_command)
+if err !=0:
+       print 'ERROR: ' + 'Failed ro run ref ' + os.strerror(err)
+       exit(-1)
+
 if args.longread:
       print''' /////longread correct//////////////////////////////////////////////////////////////////////////////////////////////////'''
       
@@ -169,3 +177,10 @@ if args.longread:
              print 'ERROR: ' + 'Failed to run bwa mem : ' + os.etrerror(err)
              exit(-1)
       print '\n'
+      long_command = ' long  ' + output_dir + '/long/aln/' + long_sam_name  + ' ' + output_dir + '/long/aln/' + longread_name  + ' ' + output_dir + '/long/ref_mis' 
+      long_command+= ' ' + output_dir + '/long/long_subcontig.fasta'
+      print 'Running command: ' + long_command
+      err = os.system(long_command)
+      if err !=0:
+             print 'ERROR: ' + 'Failed ro run  long ' + os.strerror(err)
+             exit(-1)
