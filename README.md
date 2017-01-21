@@ -10,7 +10,7 @@ The ReMILO manuscript is submitted to ISMB'17!
 
 <a name="overview"/>
 ### Overview
-ReMILO is a software that detects misassembly errors in the contigs of a species with the corresponding short reads and the reference genome of a closely related species, as well as the corresponding long reads.
+ReMILO is software that detects misassembly errors in the contigs of a species with the corresponding short reads and the reference genome of a closely related species, as well as the corresponding long reads.
 
 <a name="copyright"/>
 ###Copy right
@@ -26,7 +26,8 @@ ReMILO is under the [Artistic License 2.0](http://opensource.org/licenses/Artist
 
    Aligners [Bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) and [BWA-MEM](http://bio-bwa.sourceforge.net/) are required to run ReMILO.  
    * The source files in 'src' folder can be compiled to generate a 'bin' folder by running Makefile: `make all`. 
-   * Put Bowtie2 and BWA-MEM to $PATH: `export PATH=PATH2BOWTIE2:$PATH` and `export PATH=PATH2BWA-MEM:$PATH`, respectively.
+   * Put Bowtie2, BWA-MEM and the 'bin' folder to $PATH: `export PATH=PATH2Bowtie2:$PATH`, `export PATH=PATH2BWA-MEM:$PATH` and `export PATH=PATH2bin:$PATH`, respectively.  
+
 
 3. Inputs
    * Contigs of a species assembled by any genome assembler (ABySS, ALLPATHS-LG, SOAPdenovo2, Velvet, etc.).
