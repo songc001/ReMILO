@@ -556,10 +556,10 @@ read flag  and convert
              ch=fgetc(fp);           
           }
           sequence[k]='\0';
-            cout<<strlen(sequence)<<endl;
+      //      cout<<strlen(sequence)<<endl;
       //      getchar();
        //   cout<<"analyze"<<endl;
-          if(strcmp(qname,qname1)==0)
+          if(strcmp(qname,qname1)!=0)
           {
              if( (connum>=2)&&(judgeBypos(contig,connum,miscontig,misnum)==1) )
              {
@@ -594,8 +594,11 @@ read flag  and convert
                  fputs(tempnum,fq1);
             //     fputs("",fq1);
                  fputc('\n',fq1);
-               //    cout<<strlen(miscontig.seq)<<endl;
-               
+             //    cout<<miscontig.contig[i].qname<<endl;
+             //    cout<<strlen(miscontig.seq)<<endl;
+             //    cout<<miscontig.seq<<endl;
+            //     cout<<miscontig.contig[i].conBegin<<" " <<miscontig.contig[i].conEnd<<endl;
+              //   getchar();
                  for(int j=miscontig.contig[i].conBegin;j<=miscontig.contig[i].conEnd;j++)
                  {
                    //   cout<<miscontig.seq[j]<<endl;
@@ -662,7 +665,7 @@ read flag  and convert
                     {
                        if(miscontig.contig[i].refpos1>1000)
                        {  
-                         cout<<miscontig.contig[i].refname<<endl; 
+    //                     cout<<miscontig.contig[i].refname<<endl; 
                          for(int j=miscontig.contig[i].refpos1-1000;j<miscontig.contig[i].refpos1;j++)
                          {
                             fputc(chromosome[chrnum].at(j),fq1);
@@ -687,7 +690,7 @@ read flag  and convert
                          
                     }
                     fputc('\n',fq1); 
-                    cout<<"second"<<endl;
+    //                cout<<"second"<<endl;
                     fputc('>',fq1);
                     fputs(contig[0].qname,fq1);
                     fputc('_',fq1);
@@ -709,8 +712,8 @@ read flag  and convert
                     {
                        if(miscontig.contig[i+1].refpos1>1000)
                        {
-                         cout<<"L"<<miscontig.contig[i+1].refpos1<<endl;
-                         cout<<chromosome[chrnum].size()<<endl;
+      //                   cout<<"L"<<miscontig.contig[i+1].refpos1<<endl;
+      //                   cout<<chromosome[chrnum].size()<<endl;
                           for(int j=miscontig.contig[i+1].refpos1-1000;j<=miscontig.contig[i+1].refpos1;j++)
                           {
                             fputc(chromosome[chrnum].at(j),fq1);
@@ -723,7 +726,7 @@ read flag  and convert
                        }
                        else
                        {
-                          cout<<"L2"<<endl;
+        //                  cout<<"L2"<<endl;
                         
                           for(int j=0;j<miscontig.contig[i+1].refpos1;j++)
                           {
@@ -805,8 +808,8 @@ read flag  and convert
           strcpy(qname1,qname);
           fgets(str,1000000,fp);   
           ch=fgetc(fp);
-          cout<<connum<<endl;
-          cout<<contig[connum-1].qname<<endl;
+//          cout<<connum<<endl;
+//          cout<<contig[connum-1].qname<<endl;
       }
   }  
   fclose(fp);
