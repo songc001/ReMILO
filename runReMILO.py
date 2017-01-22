@@ -178,10 +178,10 @@ if args.longread:
              print 'ERROR: ' + 'Failed to run bwa mem : ' + os.etrerror(err)
              exit(-1)
       print '\n'
-      long_command = ' long  ' + output_dir + '/long/aln/' + long_sam_name  + ' ' + output_dir + '/long/aln/' + longread_name  + ' ' + output_dir + '/long/ref_mis' 
+      long_command = ' longread ' + output_dir + '/long/aln/' + long_sam_name  + ' ' + output_dir + '/long/aln/' + longread_name  + ' ' + output_dir + '/long/ref_mis' 
       long_command+= ' ' + output_dir + '/long/long_subcontig.fasta'
       print 'Running command: ' + long_command
       err = os.system(long_command)
       if err !=0:
-             print 'ERROR: ' + 'Failed ro run  long ' + os.strerror(err)
+             print 'ERROR: ' + 'Failed ro run  longread ' + os.strerror(err)
              exit(-1)
