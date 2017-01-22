@@ -31,14 +31,14 @@ short_read2_path=args.short_read2_path
 
 if args.insert:
         if args.insert > 65535 or args.insert < 1:
-        	print 'ERROR: argument -i/insert  should be within 1 to 128'
+        	print 'ERROR: argument -i/insert  should be within 1 to 65535'
         	exit(-1)
 if args.kmer > 127 or args.kmer < 4:
 	print 'ERROR: argument -k/--kmer  should be within 4 to 127'
 	exit(-1)
 if args.distance:
         if args.distance>65535 or args.distance < 1:
-        	print 'ERROR: argument -w/--width  should be within 2 to 20'
+        	print 'ERROR: argument -d/--distance  should be within 1 to  65535'
         	exit(-1)
 if args.coverage:
 	if args.coverage > 65535 or args.coverage < 1:
@@ -108,7 +108,7 @@ if not os.path.exists(temp_dir):
        os.makedirs(temp_dir)
 
 if os.path.exists(output_dir + '/short'):
-       print 'ERROR: ' + output_dir + '/ref' + ' already exist, please delete it before running ref'
+       print 'ERROR: ' + output_dir + '/short' + ' already exist, please delete it before running ref'
        exit(-1)
 else:
        os.mkdir(output_dir + '/short')
@@ -142,7 +142,7 @@ short_command+= ' ' + output_dir + '/short/splitcontig'
 print 'Running command: ' + short_command
 err = os.system(short_command)
 if err !=0:
-       print 'ERROR: ' + 'Failed ro run ref ' + os.strerror(err)
+       print 'ERROR: ' + 'Failed ro run shortread ' + os.strerror(err)
        exit(-1)
 
 if args.longread:
@@ -184,3 +184,14 @@ if args.longread:
       if err !=0:
              print 'ERROR: ' + 'Failed ro run  long ' + os.strerror(err)
              exit(-1)
+# final result
+if not os.path.exists(output_dir):
+      os.makedirs(output_dir)
+if os.path.exists(output_dir + '/final_result'):
+     print 'ERROR: ' + output_dir + '/final_result' + ' already exist, please delete it before running ref'
+     exit(-1)
+else:
+     os.mkdir(output_dir + 'final_result')
+
+
+
