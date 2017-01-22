@@ -66,7 +66,24 @@ int judgeDirect(int direct)
     {
         return   0;
     }
-}
+}/*
+int    dealSeq(char seq[],char (&moseq)[10000000])
+{
+ {
+    int i;
+    if(contig.direction==0)
+    {
+     contig.refpos2=contig.refpos1+contig.tolen;
+    }
+    else
+    {
+      contig.refpos2=contig.refpos1+contig.tolen;
+    }
+  //  cout<<contig.refpos1<<" "<<contig.refpos2<<" "<<length<<endl;
+    return 0;
+ }
+  */          
+//output  subcontig
  
 int main(int argc,char *argv[])
 { 
