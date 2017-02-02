@@ -12,7 +12,7 @@ ref:src/ref.o
 	$(CXX) $(CXXFLAGS) src/ref.o   -o ref
 
 ref.o:src/ref.cpp
-	$(CXX) $(CXXFLAGS) -c src/ref.cpp
+	$(CXX) $(CXXFLAGS) -c src/refgenome.cpp
 
 shortread:src/shortread.o
 	$(CXX)   src/shortread.o -o shortread
