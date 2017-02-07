@@ -10,7 +10,7 @@ The ReMILO manuscript is submitted to ISMB'17!
 
 <a name="overview"/>
 ### Overview
-ReMILO is software that detects misassembly errors in the contigs of a species with the corresponding short reads and the reference genome of a closely related species, as well as the corresponding long reads.
+ReMILO is software that detects misassembly errors in the contigs of a species  using  the corresponding short reads and the reference genome of a closely related species, as well as the corresponding long reads.
 
 <a name="copyright"/>
 ###Copy right
@@ -47,7 +47,7 @@ ReMILO is under the [Artistic License 2.0](http://opensource.org/licenses/Artist
    -k/-kmer n (19)  
    Size of k bases.  
    -d/-distance n (85)  
-   Minimum alignment distance of adjacent contig positions to detect a misassembly error (with either reference genome or long reads).  
+   Minimum alignment distance of adjacent contig positions to detect a misassembly error (using either reference genome or long reads).  
    -l/-longread long_reads.fa (yes)  
    Corresponding long reads.  
    -c/-coverage n (1)  
