@@ -108,7 +108,7 @@ if not os.path.exists(temp_dir):
        os.makedirs(temp_dir)
 
 if os.path.exists(output_dir + '/short'):
-       print 'ERROR: ' + output_dir + '/ref' + ' already exist, please delete it before running ref'
+       print 'ERROR: ' + output_dir + '/ref' + ' already exist, please delete it before running ref '
        exit(-1)
 else:
        os.mkdir(output_dir + '/short')
