@@ -9,8 +9,9 @@ using namespace std;
 typedef  struct  Read{
          int  pos;
          char name[100];
+         char sequence[1000];
          int  direction;
-}Read;
+};
 typedef  struct  MyContig{
         //   char  cigar[100000];
            vector<Read>   read1;
@@ -32,23 +33,7 @@ typedef   struct  Index{
 #define  percent  0.20
 //char  qname[1000000],qname1[1000000]; 
 
-//FILE  *fp,*fq,*fq1,*fp1;
-/*
-Contig  g_contig1,g_contig2;
-//Mispos   mispos[10];
-int convertInt(char str[])
-{
-   int length;
-   int sum=0;
-
-   length=strlen(str);
-   for(int i=0; i<length; i++)
-   {
-      sum+=(str[i]-'0')*pow(10,(length-i-1));
-   }
-   return sum;
-} 
-*/
+//FILE  *fp,*fq,*fq1,*fp1
 /*
    1   represent  reverse  
    0   represent  positive 
@@ -67,40 +52,63 @@ int judgeDirect(int direct)
         return   0;
     }
 }/*
-int    dealSeq(char seq[],char (&moseq)[10000000])
-{
- {
-    int 
+ }
   */          
-//output  subcontig
- 
+//output  subcontigs 
+
+int calcuContigcover(Contig  contig)
+{
+    float   coverage=0;
+    int     sumlength=0;
+    for( int i=0;i<contig.read1.size();i++)
+    {
+       sumlength+=strlen(contig.read1[i].sequence);
+    }
+    for( int i=0;i<contig.read2.size();i++)
+    {
+       sumlength+=strlen(contig.read2[i].sequence);
+    }
+    coverage=sumlength/(contig.length*1.0);
+    
+    return  coverage;
+} 
+int calcuOverallcover(vector<Contig>  contig,int sumReadlength)
+{     
+    float  coverage=0;	
+    int    sumContiglength=0;
+    for( int i=0;i<contig.size();i++)
+    {
+        sumContiglength+=contig[i].length;
+    }
+    coverage=sumReadlength/(sumContiglength*1.0);
+    return coverage;
+}
+
 int main(int argc,char *argv[])
 { 
-  FILE *fp,*fp1,*fp2,*fq;
-  char ch;
-  char chflag[10];
-  char chpos[20];
-  char str[1000000];
-  char tempnum[1000];
-  char qname[100], qname1[100],refname[100];
-  char cigar[100000],sequence[10000000];
-  int  flag;
-  int  pos;
-  int  con_length;
-  int  k,thousand=0;;
-  int  count, mark, connum=0,misnum=0; 
-  int tempcount=0; 
-  int  precigar[2000],becigar[2000],lencigar[2000];
-  vector<char>  chromosome; 
-  int chrcount=0,chrnum=0;
-  Index   index[3000];
-  Contig contig[200000];
-  Miscontig  miscontig[20000];
-  int        miscount=0,refcount=0;
-  char    tempname[100];
-  Read    read;
-  int direction;
-  char  tempstr[100],tempstr1[100];
+  FILE	*fp,*fp1,*fp2,*fq;
+  char	ch;
+  char	chflag[10];
+  char	chpos[20];
+  char	str[1000000];
+  char	tempnum[1000];
+  char	qname[100], qname1[100],refname[100];
+  char	cigar[100000],sequence[10000000];
+  int 	flag;
+  int 	pos;
+  int 	con_length;
+  int 	k,thousand=0;;
+  int 	count, mark, connum=0,misnum=0; 
+  int	tempcount=0; 
+  int   sumReadlength=0; 
+  vector<Contig>   contig;
+  vector<char>	   chromosome;
+  Miscontig	   miscontig[20000];
+  int	miscount=0,refcount=0;
+  char	tempname[100];
+  Read	read;
+  int	direction;
+  int	support_1,support_2,support_3;
   if((fp=fopen(argv[1],"r"))==NULL)
   {
      printf("read1.sam open error");
@@ -113,126 +121,114 @@ int main(int argc,char *argv[])
   {
      printf("contig file open error");
   }
+ 
   if((fq=fopen("misassembiles","w"))==NULL)
   {
      printf("fq open error");
   }
-/*  if((fq1=fopen("subcontig","w"))==NULL)
+/*
+  if((fq1=fopen("subcontig","w"))==NULL)
   {
      printf("fq1 open error");
   }
 */
-//  cout<<"1"<<endl;
+   cout<<"1"<<endl;
   if(argc==1)
   {
      printf("usage:");
      printf("./shortread fq1 fq2 ");
   }
   ch=fgetc(fp2);
-    tempstr[0]='\0';
   while(ch!=EOF)
   {
     if(ch=='>')
     {
          ch=fgetc(fp2);
          count=0;
-         while(ch!='_')
+         while(ch!='\n')
          {
-            tempstr1[count]=ch;
             miscontig[miscount].contig1.name[count++]=ch;
             ch=fgetc(fp2);
          }
-         while(ch!='\n')
-         {
-            miscontig[miscount].contig1.name[count++]=ch;
-            ch=fgetc(fp);
-         }
          miscontig[miscount].contig1.name[count++]='\0';
-         if(strcmp(tempstr,tempstr1)==0)
+         while(ch!='>')
          {
-            strcpy( miscontig[miscount].thirdcontig1.name,miscontig[miscount].contig1.name);
-            miscontig[miscount].contig1=miscontig[miscount-1].contig1;
-            while(ch!='>')
-            {
-                if(ch!='\n')    chromosome.push_back(ch);
-                ch=fgetc(fp2);
-            }
-            miscontig[miscount].thirdcontig1.length=chromosome.size();
+            if(ch!='\n')    chromosome.push_back(ch);
+            ch=fgetc(fp2);
          }
-         else
-         {
-              while(ch!='>')
-              {
-                  if(ch!='\n')    chromosome.push_back(ch);
-                  ch=fgetc(fp2);
-              }
-              miscontig[miscount].contig1.length=chromosome.size();
-          
-              ch=fgetc(fp2);
-              count=0;
-              while(ch!='\n')
-              {
-                  miscontig[miscount].thirdcontig1.name[count++]=ch;
-                  ch=fgetc(fp2);
-              }
-              miscontig[miscount].thirdcontig1.name[count++]='\0';
-              while(ch!='>')
-              {
-                if(ch!='\n')    chromosome.push_back(ch);
-                ch=fgetc(fp2);
-              }
-              miscontig[miscount].thirdcontig1.length=chromosome.size();
-         }
+       miscontig[miscount].contig1.length=chromosome.size();
+   
+//      cout<<miscontig[miscount].contig1.name<<endl; 
+       ch=fgetc(fp2);
+       count=0;
+       while(ch!='\n')
+       {
+          miscontig[miscount].thirdcontig1.name[count++]=ch;
+          ch=fgetc(fp2);
+       }
+       miscontig[miscount].thirdcontig1.name[count++]='\0';
+       while(ch!='>')
+       {
+          if(ch!='\n')    chromosome.push_back(ch);
+          ch=fgetc(fp2);
+       }
+       miscontig[miscount].thirdcontig1.length=chromosome.size();
 
   //    cout<<miscontig[miscount].thirdcontig1.name<<endl; 
        
+      ch=fgetc(fp2);
+      count=0;
+      while(ch!='\n')
+      {
+         miscontig[miscount].thirdcontig2.name[count++]=ch;
          ch=fgetc(fp2);
-         count=0;
-         while(ch!='\n')
-         {
-         	 miscontig[miscount].thirdcontig2.name[count++]=ch;
-           	ch=fgetc(fp2);
-         }
-      		miscontig[miscount].thirdcontig2.name[count]='\0';
-     	 while(ch!='>')
-         {
-        	 if(ch!='\n')    chromosome.push_back(ch);
-         	ch=fgetc(fp2);
-      	 }
-         miscontig[miscount].thirdcontig2.length=chromosome.size();
+      }
+      miscontig[miscount].thirdcontig2.name[count]='\0';
+      while(ch!='>')
+      {
+         if(ch!='\n')    chromosome.push_back(ch);
          ch=fgetc(fp2);
-   
-         count=0;
-         while(ch!='\n')
-         {
-        	 miscontig[miscount].contig2.name[count++]=ch;
-     		 ch=fgetc(fp2);
-         }
-         miscontig[miscount].contig2.name[count]='\0';
-      
-         while(ch!='>'&&ch!=EOF)
-         {
-        	 if(ch!='\n')    chromosome.push_back(ch);
-        	 ch=fgetc(fp2);
-         }
-         miscontig[miscount].contig2.length=chromosome.size();
-         miscount++;
-         strcpy(tempstr,tempstr1);
-     }
-    
-   }
+      }
+       miscontig[miscount].thirdcontig2.length=chromosome.size();
+
+
+      ch=fgetc(fp2);
+      count=0;
+      while(ch!='\n')
+      {
+         miscontig[miscount].contig2.name[count++]=ch;
+         ch=fgetc(fp2);
+      }
+      miscontig[miscount].contig2.name[count]='\0';
+      while(ch!='>'&&ch!=EOF)
+      {
+         if(ch!='\n')    chromosome.push_back(ch);
+         ch=fgetc(fp2);
+      }
+      miscontig[miscount].contig2.length=chromosome.size();
+      miscount++;
+    }
+    cout<<miscount<<endl;
+  }
 //  cout<<miscount<<endl;
-  cout<<"load "<<miscount<<" misassembled contig"<<endl;
+  cout<<"load "<<miscount<<" contig"<<endl;
  // getchar();
+//  strcpy(contig[connum++].qname,qname)
+
+
+
+
   ch=fgetc(fp);
   while(ch!=EOF)
   {
-//read  read1.sam
       if(ch=='@')
       {
         fgets(str,1000,fp);
         ch=fgetc(fp);
       }
+/*
+read qname 
+*/
       else
       {
           k=0;    
@@ -242,7 +238,9 @@ int main(int argc,char *argv[])
             ch=fgetc(fp);
           }
           qname[k]='\0';
-
+/*
+read flag  and convert
+*/
           k=0;
           ch=fgetc(fp);
           while(ch!='	')
@@ -252,7 +250,9 @@ int main(int argc,char *argv[])
           }
           chflag[k]='\0';
           flag=atoi(chflag);
-         // read  refname
+/* 
+ read  refname
+*/ 
           k=0;
           ch=fgetc(fp);
           while(ch!='	')
@@ -261,8 +261,9 @@ int main(int argc,char *argv[])
             ch=fgetc(fp);
           }
           refname[k]='\0';
-         //contig's pos on  the reference  genome
-          
+/*
+  contig's pos on  the reference  genome
+*/          
           k=0;
           ch=fgetc(fp);
           while(ch!='	')
@@ -278,7 +279,10 @@ int main(int argc,char *argv[])
           {
             ch=fgetc(fp);
           }
-        // cigar        
+  //        cout<<"load cigar"<<endl;
+/*
+ cigar
+*/          
           k=0;
           ch=fgetc(fp);
           while(ch!='	')
@@ -290,8 +294,35 @@ int main(int argc,char *argv[])
           /*
           save info
 */
+          ch=fgetc(fp);
+          while(ch!='	')
+          {
+             ch=fgetc(fp);
+          }
+          
+          ch=fgetc(fp);
+          while(ch!='	')
+          {
+             ch=fgetc(fp);
+          }
+       
+          ch=fgetc(fp);
+          while(ch!='	')
+          {
+             ch=fgetc(fp);
+          }
+
+          k=0;
+          ch=fgetc(fp);
+          while(ch!='	')
+          {
+             sequence[k++]=ch;
+             ch=fgetc(fp);           
+          }
+          sequence[k]='\0';
+          k=0;
+
           direction=judgeDirect(flag);
-//deal  reads
           if(strcmp(refname,"*")!=0)
           {
                 refcount++;
@@ -300,44 +331,41 @@ int main(int argc,char *argv[])
                 read.direction=direction;
                 for(int i=0;i<miscount;i++)
                 {
-                   if(( strcmp(refname,miscontig[i].contig1.name) )==0
-                        &&(  ((miscontig[i].contig1.length-pos)<300) || (pos<300)  ) )
+                   if(( strcmp(refname,miscontig[i].contig1.name) )==0 )
                    {
                       miscontig[i].contig1.read1.push_back(read);
                    } 
-       //     cout<<qname<<endl;
-                   if(( strcmp(refname,miscontig[i].contig2.name) )==0
-                        &&(  ((miscontig[i].contig2.length-pos)<300)|| (pos<300)  ) )
+                   if(( strcmp(refname,miscontig[i].contig2.name) )==0 )
                    {
                       miscontig[i].contig2.read1.push_back(read);
                    } 
-                   if(( strcmp(refname,miscontig[i].thirdcontig1.name) )==0
-                        &&(  ((miscontig[i].thirdcontig1.length-pos)<300)|| (pos<300)  )  )
+                   if(( strcmp(refname,miscontig[i].thirdcontig1.name) )==0 )
                    {
                       miscontig[i].thirdcontig1.read1.push_back(read);
                    } 
-                   if(( strcmp(refname,miscontig[i].thirdcontig2.name) )==0
-                        &&(  ((miscontig[i].thirdcontig2.length-pos)<300)|| (pos<300)  )  )
+                   if(( strcmp(refname,miscontig[i].thirdcontig2.name) )==0 )
                    {
                       miscontig[i].thirdcontig2.read1.push_back(read);
                    } 
                 }
+                sumReadlength+=strlen(sequence);
           }
-        
-       //  cout<<qname<<endl; 
+    
           if(strcmp(qname,qname1)!=0)
           {
-          	connum++;
-          	if(connum==1000000)
-          	{
-          	   thousand++;
-             	   cout<<"deal"<<connum*thousand<<"reads"<<endl;
-                   cout<<miscontig[0].contig1.read1[thousand].pos<<endl;
-                   cout<<miscontig[0].contig1.read1[thousand].name<<endl;
-                   connum=0;
-                }
+              
+             connum++;
+             if(connum==1000000)
+             {
+               thousand++;
+               cout<<"deal"<<connum*thousand<<"reads"<<endl;
+               cout<<miscontig[0].contig1.read1[thousand].pos<<endl;
+               cout<<miscontig[0].contig1.read1[thousand].name<<endl;
+               connum=0;
+             }
            
-          }          
+          }
+          
           strcpy(qname1,qname);
           fgets(str,1000000,fp);   
           ch=fgetc(fp);
@@ -345,12 +373,11 @@ int main(int argc,char *argv[])
       }
   }  
   cout<<refcount<<endl;
+  getchar();
+
   ch=fgetc(fp1);
-//read2.sam
-  refcount=0;
   while(ch!=EOF)
   {
-//read file
       if(ch=='@')
       {
         fgets(str,1000,fp1);
@@ -421,35 +448,60 @@ read flag  and convert
              ch=fgetc(fp1);
           }
           cigar[k]='\0';  
-    
-//deal read2
+          /*
+          save info
+*/
+          ch=fgetc(fp1);
+          while(ch!='	')
+          {
+             ch=fgetc(fp1);
+          }
+          
+          ch=fgetc(fp1);
+          while(ch!='	')
+          {
+             ch=fgetc(fp1);
+          }
+       
+          ch=fgetc(fp1);
+          while(ch!='	')
+          {
+             ch=fgetc(fp1);
+          }
+
+          k=0;
+          ch=fgetc(fp1);
+          while(ch!='	')
+          {
+             sequence[k++]='\0';
+             ch=fgetc(fp1);           
+          }
+          sequence[k]='\0';
+          k=0;
+
           direction=judgeDirect(flag);
           if(strcmp(refname,"*")!=0)
           {
                 refcount++;
                 strcpy(read.name,qname);
+                strcpy(read.sequence,sequence);
                 read.pos=pos;
                 read.direction=direction;
                 for(int i=0;i<miscount;i++)
                 {
-                   if(( strcmp(refname,miscontig[i].contig1.name) )==0
-                        &&(  ((miscontig[i].contig1.length-pos)<300) || (pos<300)  ) )
+                   if(( strcmp(refname,miscontig[i].contig1.name) )==0 )
                    {
                       miscontig[i].contig1.read2.push_back(read);
                    } 
-       //     cout<<qname<<endl;
-                   if(( strcmp(refname,miscontig[i].contig2.name) )==0
-                        &&(  ((miscontig[i].contig2.length-pos)<300)|| (pos<300)  ) )
+                   if(( strcmp(refname,miscontig[i].contig2.name) )==0 )
                    {
                       miscontig[i].contig2.read2.push_back(read);
                    } 
-                   if(( strcmp(refname,miscontig[i].thirdcontig1.name) )==0
-                        &&(  ((miscontig[i].thirdcontig1.length-pos)<300)|| (pos<300)  )  )
+                   if(( strcmp(refname,miscontig[i].thirdcontig1.name) )==0 )
                    {
                       miscontig[i].thirdcontig1.read2.push_back(read);
                    } 
-                   if(( strcmp(refname,miscontig[i].thirdcontig2.name) )==0
-                        &&(  ((miscontig[i].thirdcontig2.length-pos)<300)|| (pos<300)  )  )
+                   if(( strcmp(refname,miscontig[i].thirdcontig2.name) )==0 )
                    {
                       miscontig[i].thirdcontig2.read2.push_back(read);
                    } 
@@ -556,6 +608,76 @@ read flag  and convert
       }
       fputc('\n',fq);
   }
+  for(int i=0;i<miscount;i++)
+  {
+      for(int j=0;j<miscontig[i].contig1.read1.size();j++)
+      {
+         for(int m=0;m<miscontig[i].thirdcontig1.read2.size();m++ )
+         {
+             if( ( strcmp( miscontig[i].contig1.read1[j].name, miscontig[m].thirdcontig1.read2[m].name )==0 ) ) 
+             {
+              
+                support_1++;
+             }
+         }
+      }
+      for(int j=0;j<miscontig[i].contig1.read2.size();j++)
+      {
+         for(int m=0;m<miscontig[i].thirdcontig1.read1.size();m++ )
+         {
+             if( strcmp( miscontig[i].contig1.read2[j].name,miscontig[i].thirdcontig1.read1[m].name )==0 )
+             {
+                support_1++;
+             }
+         }
+      }
+      for(int j=0;j<miscontig[i].contig2.read1.size();j++)
+      {
+         for(int m=0;m<miscontig[i].thirdcontig2.read2.size();m++)
+         {
+             if( strcmp( miscontig[i].contig2.read1[j].name, miscontig[i].thirdcontig2.read2[m].name )==0)
+             {
+                support_2++;
+             }
+         }
+      }
+      for(int j=0;j<miscontig[i].contig2.read2.size();j++)
+      {
+         for(int m=0;m<miscontig[i].thirdcontig2.read1.size();m++)
+         {
+             if( strcmp( miscontig[i].contig2.read2[j].name, miscontig[i].thirdcontig2.read1[m].name )==0 )
+             {
+                support_2++;
+             }
+         }
+      }
+      for(int j=0;j<miscontig[i].contig1.read1.size();j++)
+      {
+         for(int m=0;m<miscontig[i].contig2.read2.size();m++)
+         {
+             if( strcmp( miscontig[i].contig1.read1[j].name, miscontig[i].contig2.read2[m].name )==0 )
+             {
+                support_3++;
+             }
+         }
+      }
+      for(int j=0;j<miscontig[i].contig1.read2.size();j++)
+      {
+         for(int m=0;m<miscontig[i].contig2.read1.size();m++)
+         {
+             if( strcmp( miscontig[i].contig1.read2[j].name, miscontig[m].contig2.read1[m].name )==0 )
+             {
+               support_3++;
+             }
+         }
+      } 
+     
+      if( ( support_3>support_2 ) && ( support_3>support_1 ) && ( support_3>0 ) )
+      {
+         cout<<miscontig[i].contig1.name<<" exits errors "<<endl;
+      }
+  }
+    
   fclose(fp);
   fclose(fp1);
   fclose(fq);  
