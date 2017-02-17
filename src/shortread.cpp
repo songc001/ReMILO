@@ -317,11 +317,12 @@ read flag  and convert
           while(ch!='	')
           {
              sequence[k++]=ch;
-             ch=fgetc(fp);           
+             ch=fgetc(fp);          
+             cout<<ch<<endl; 
           }
           sequence[k]='\0';
           k=0;
-
+          cout<<sequence<<endl;
           direction=judgeDirect(flag);
           if(strcmp(refname,"*")!=0)
           {
@@ -350,7 +351,8 @@ read flag  and convert
                 }
                 sumReadlength+=strlen(sequence);
           }
-    
+          cout<<sequence<<endl;
+          getchar(); 
           if(strcmp(qname,qname1)!=0)
           {
               
