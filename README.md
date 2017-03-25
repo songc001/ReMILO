@@ -1,5 +1,5 @@
 ### LATEST NEWS
-The ReMILO manuscript is submitted to ISMB'17! 
+The ReMILO manuscript is submitted to Bioinformatics! 
 
 ### Overview
 ReMILO is software that detects misassembly errors in the contigs of a species  using  the corresponding short reads and the reference genome of a closely related species, as well as the corresponding long reads.
