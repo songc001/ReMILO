@@ -8,31 +8,31 @@ CP	= cp
 
 all:ref shortread  longread  bin  clean   instbin 
 
-ref:src/ref.o
-	$(CXX) $(CXXFLAGS) src/ref.o   -o ref
+ref:src/processRefGenome.o
+	$(CXX) $(CXXFLAGS) src/processRefGenome.o   -o  processRefGenome
 
-ref.o:src/ref.cpp
-	$(CXX) $(CXXFLAGS) -c src/refgenome.cpp
+processRefGenome.o:src/processRefGenome.cpp
+	$(CXX) $(CXXFLAGS) -c src/processRefGenome.cpp
 
-shortread:src/shortread.o
-	$(CXX)   src/shortread.o -o shortread
+shortread:src/processShortReads.o
+	$(CXX)   src/processShortReads.o -o  processShortReads
 
-shortread.o:src/shortread.cpp
-	$(CXX) -c src/shortread.cpp
+processShortReads.o:src/processShortRead.cpp
+	$(CXX) -c src/processShortRead.cpp
 
-longread:src/longread.o
-	$(CXX) src/longread.o  -o  longread
+longread:src/processLongReads.o
+	$(CXX) src/processLongReads.o  -o  processLongReads
 
-longread.o:src/longread.cpp
-	$(CXX) -c  src/longread.cpp
+processLongReads.o:src/processLongReads.cpp
+	$(CXX) -c  src/processLongReads.cpp
 
 bin:		
 	mkdir bin
 
 instbin:
-	$(MV)  ref shortread  longread bin
+	$(MV)  processRefGenome  processShortReads  processLongReads bin
 
 clean:
-	$(RM) src/ref.o src/shortread.o src/longread.o  
+	$(RM) src/processRefGenome.o src/processShortReads.o src/processLongReads.o  
 
 
