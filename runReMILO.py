@@ -52,7 +52,7 @@ if args.longread:
 #print start_time
 
 # Step 1 detect misassembled errors by reference  ####################
-print''' /////STEP1 STARTED //////////////////////////////////////////////////////////////////////////////////////////////////'''
+print'''/////STEP1 STARTED //////////////////////////////////////////////////////////////////////////////////////////////////'''
 
 if os.path.exists(output_dir + '/ref'):
         shutil.rmtree("./output")
@@ -74,9 +74,9 @@ str=reference_path
 list=str.split('/')
 reference_name=list[len(list)-1]
 shutil.copyfile(reference_path,output_dir+'/ref/aln/'+reference_name)
-bwa_index_command = ' bwa index '  + output_dir +'/ref/aln/' + reference_name + ' 2>' + output_dir+'/ref/aln/bwa.txt' 
+bwa_index_command = 'bwa index '  + output_dir +'/ref/aln/' + reference_name + ' 2>' + output_dir+'/ref/aln/bwa.txt' 
 
-print 'Running command: ' + bwa_index_command
+print 'Running command:' + bwa_index_command
 err = os.system(bwa_index_command)
 if err != 0:
         print 'ERROR: ' + 'Failed to run bwa index:' + os.strerror(err)
@@ -85,10 +85,10 @@ list1 = contig_path.split('/')
 contig_name = list1[len(list1)-1]
 tempstr = contig_name.split('.')
 sam_name = tempstr[0] + '.sam'
-bwa_mem_command = ' bwa mem -a ' +  output_dir +'/ref/aln/' + reference_name + ' ' + contig_path + ' > ' + output_dir + '/ref/aln/' + sam_name 
+bwa_mem_command = 'bwa mem -a ' +  output_dir +'/ref/aln/' + reference_name + ' ' + contig_path + ' > ' + output_dir + '/ref/aln/' + sam_name 
 bwa_mem_command += ' 2>'+output_dir+'/ref/aln/bwa.txt'
  
-print 'Running command: ' + bwa_mem_command
+print 'Running command:' + bwa_mem_command
 err = os.system(bwa_mem_command)
 if err !=0:
         print 'ERROR: ' + 'Failed to run bwa mem : ' + os.strerror(err)
@@ -96,9 +96,9 @@ if err !=0:
 #print '\n'
 #print 'Detect misassemble errors by reference genome ' 
 
-REF_command = ' processRefGenome ' + output_dir + '/ref/aln/' + sam_name  + ' ' +  output_dir + '/ref/aln/' + reference_name  + ' ' + output_dir + '/ref/locations.txt' 
+REF_command = 'processRefGenome ' + output_dir + '/ref/aln/' + sam_name  + ' ' +  output_dir + '/ref/aln/' + reference_name  + ' ' + output_dir + '/ref/locations.txt' 
 REF_command+= ' ' + output_dir + '/ref/subContig.fa'
-print 'Running command: ' + REF_command
+print 'Running command:' + REF_command
 err = os.system(REF_command)
 if err !=0:
        print 'ERROR: ' + 'Failed ro run ref ' + os.strerror(err)
@@ -119,44 +119,44 @@ else:
        os.mkdir(output_dir+'/short/aln')
 shutil.move(output_dir+'/ref/subContig.fa',output_dir+ '/short/aln/')
 shutil.move(output_dir + '/ref/locations.txt',output_dir + '/short/aln/')
-bowtie2_index_command= ' bowtie2-build  ' + output_dir + '/short/aln/subContig.fa ' + output_dir + '/short/aln/subContig' + ' 1> '+output_dir + '/short/aln/bowtie2.txt'
+bowtie2_index_command= 'bowtie2-build  ' + output_dir + '/short/aln/subContig.fa ' + output_dir + '/short/aln/subContig' + ' 1> '+output_dir + '/short/aln/bowtie2.txt'
 bowtie2_index_command+=' 2> ' +output_dir + '/short/aln/bowtie2.err'
-print 'Running command: ' + bowtie2_index_command
+print 'Running command:' + bowtie2_index_command
 err = os.system(bowtie2_index_command)
 if err!=0:
       print 'ERROR: ' + 'Failed to run bowtie2 build : ' +os.strerror(err)
       exit(-1)
-bowtie2_mapread1_command = ' bowtie2 -x ' + output_dir + '/short/aln/subContig -U ' + short_read1_path + ' -S ' + output_dir 
+bowtie2_mapread1_command = 'bowtie2 -x ' + output_dir + '/short/aln/subContig -U ' + short_read1_path + ' -S ' + output_dir 
 bowtie2_mapread1_command+= '/short/aln/read1.sam' +' 1>> ' + output_dir +'/short/aln/bowtie2.txt'  +' 2>> '+output_dir+'/short/aln/bowtie2.err'
-print 'Running command: ' + bowtie2_mapread1_command
+print 'Running command:' + bowtie2_mapread1_command
 err = os.system(bowtie2_mapread1_command)
 if err !=0:
       print 'ERROR: ' + ' Failed to run bowtie2   read1 : ' + os.strerror(err)
       exit(-1)
 
-bowtie2_mapread2_command = ' bowtie2 -x ' + output_dir + '/short/aln/subContig -U ' + short_read2_path 
+bowtie2_mapread2_command = 'bowtie2 -x ' + output_dir + '/short/aln/subContig -U ' + short_read2_path 
 bowtie2_mapread2_command+= ' -S ' + output_dir + '/short/aln/read2.sam ' +' 1>> ' +output_dir + '/short/aln/bowtie2.txt' +' 2>> '+output_dir+'/short/aln/bowtie2.err'
-print 'Running command: ' + bowtie2_mapread1_command
+print 'Running command:' + bowtie2_mapread1_command
 err = os.system(bowtie2_mapread2_command)
 if err !=0:
       print 'ERROR: ' + ' Failed to run bowtie2   read2 : ' + os.strerror(err)
       exit(-1)
 #print '\n'
 miserr=3
-print''' /////STEP1 DONE//////////////////////////////////////////////////////////////////////////////////////////////////'''
+print'''/////STEP1 DONE//////////////////////////////////////////////////////////////////////////////////////////////////'''
 
-print''' /////STEP2 STARTED//////////////////////////////////////////////////////////////////////////////////////////////////'''
-short_command = ' processShortReads ' + output_dir + '/short/aln/read1.sam'  + ' ' + output_dir + '/short/aln/read2.sam' + ' ' 
+print'''/////STEP2 STARTED//////////////////////////////////////////////////////////////////////////////////////////////////'''
+short_command = 'processShortReads ' + output_dir + '/short/aln/read1.sam'  + ' ' + output_dir + '/short/aln/read2.sam' + ' ' 
 short_command += output_dir + '/short/aln/subContig.fa '
 short_command+= ' ' + output_dir + '/short/misLocations.txt ' + output_dir + '/short/splitContigs.fa ' +output_dir + '/short/unsplitContigs.fa'
-print 'Running command: ' + short_command
+print 'Running command:' + short_command
 err = os.system(short_command)
 if err !=0:
        print 'ERROR: ' + 'Failed ro run shortread ' + os.strerror(err)
        exit(-1)
-print''' /////STEP2 DONE //////////////////////////////////////////////////////////////////////////////////////////////////'''
+print'''/////STEP2 DONE //////////////////////////////////////////////////////////////////////////////////////////////////'''
 if args.longread:
-      print''' /////STEP3 STARTED//////////////////////////////////////////////////////////////////////////////////////////////////'''
+      print'''/////STEP3 STARTED//////////////////////////////////////////////////////////////////////////////////////////////////'''
       
       if not os.path.exists(output_dir):
              os.makedirs(output_dir)
@@ -173,30 +173,30 @@ if args.longread:
       long_list=longread_path.split('/')
       longread_name=long_list[len(long_list)-1]
       shutil.copyfile(longread_path,output_dir + '/long/aln/' +  longread_name)
-      longread_bwa_index_command=' bwa index ' + output_dir + '/long/aln/' + longread_name + ' 2> ' +output_dir+'/long/aln/bwa.txt'
-      print 'Running command: ' + longread_bwa_index_command
+      longread_bwa_index_command='bwa index ' + output_dir + '/long/aln/' + longread_name + ' 2> ' +output_dir+'/long/aln/bwa.txt'
+      print 'Running command:' + longread_bwa_index_command
       err = os.system(longread_bwa_index_command)
       if err != 0:
              print 'ERROR: ' + 'Failed to run bwa index : ' + os.strerror(err)
              exit(-1)
 
       long_sam_name='long_' + sam_name
-      longread_bwa_mem_command =' bwa mem -a ' + output_dir + '/long/aln/' + longread_name
+      longread_bwa_mem_command ='bwa mem -a ' + output_dir + '/long/aln/' + longread_name
       longread_bwa_mem_command +=' ' + contig_path + '> '  + output_dir + '/long/aln/' + long_sam_name  +' 2>> ' +output_dir + '/long/aln/bwa.txt'
-      print 'Running command: ' + longread_bwa_mem_command
+      print 'Running command:' + longread_bwa_mem_command
       err = os.system(longread_bwa_mem_command)
       if err != 0:
              print 'ERROR: ' + 'Failed to run bwa mem : ' + os.etrerror(err)
              exit(-1)
 #      print '\n'
-      print''' /////STEP3 DONE//////////////////////////////////////////////////////////////////////////////////////////////////'''
+      print'''/////STEP3 DONE//////////////////////////////////////////////////////////////////////////////////////////////////'''
 
-      print''' /////STEP4 STARTED //////////////////////////////////////////////////////////////////////////////////////////////////'''
-      long_command = ' processLongReads ' + output_dir + '/long/aln/' + long_sam_name  + ' ' + output_dir + '/long/aln/' 
+      print'''/////STEP4 STARTED //////////////////////////////////////////////////////////////////////////////////////////////////'''
+      long_command = 'processLongReads ' + output_dir + '/long/aln/' + long_sam_name  + ' ' + output_dir + '/long/aln/' 
       long_command += longread_name  + ' ' + output_dir + '/long/misLocations.txt' 
       long_command += ' ' + output_dir + '/long/splitContigs.fa '
       long_command += output_dir + '/long/unsplitContigs.fa'
-      print 'Running command: ' + long_command
+      print 'Running command:' + long_command
       err = os.system(long_command)
       if err !=0:
              print 'ERROR: ' + 'Failed ro run  longread ' + os.strerror(err)
@@ -206,7 +206,7 @@ if args.longread:
 shutil.copy2(output_dir+'/short/misLocations.txt','./output/')
 shutil.copy2(output_dir+'/short/splitContigs.fa','./output/')
 shutil.copy2(output_dir+'/short/unsplitContigs.fa','./output/')
-print''' /////STEP4 DONE //////////////////////////////////////////////////////////////////////////////////////////////////'''
+print'''/////STEP4 DONE //////////////////////////////////////////////////////////////////////////////////////////////////'''
 
 print '\n'
-print ' %d MISASSEMBLY ERRORS DETECTED!REMILO SUCCESSFULLY FINISHED!' %miserr
+print '%d MISASSEMBLY ERRORS DETECTED! REMILO SUCCESSFULLY FINISHED!' %miserr
