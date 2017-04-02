@@ -34,7 +34,7 @@ typedef   struct  Index{
 #define  percent  0.20
 //char  qname[1000000],qname1[1000000]; 
 
-FILE  *fp,*fq,*fq1,*fp1;
+FILE  *fp,*fq,*fq1,*fp1,*fq2;
 Contig  g_contig1,g_contig2;
 //Mispos   mispos[10];
 int convertInt(char str[])
@@ -404,7 +404,7 @@ int main(int argc,char *argv[])
   int  pos;
   int  con_length;
   int  k;
-  int  count, mark, connum=0,misnum=0; 
+  int  count, mark, connum=0,misnum=0,misassemblynum=0; 
   int tempcount=0; 
   int  precigar[2000],becigar[2000],lencigar[2000];
   vector<char>  chromosome[100]; 
@@ -429,7 +429,11 @@ int main(int argc,char *argv[])
   {
      printf("fq1 open error");
   }
-  cout<<"load  sequence"<<endl;
+  if((fq2=fopen(argv[5],"w"))==NULL)
+  {
+     printf("fq2 open error");
+  }
+ // cout<<"load  sequence"<<endl;
   ch=fgetc(fp1);
   while(ch!=EOF)
   {
@@ -445,7 +449,7 @@ int main(int argc,char *argv[])
        index[chrcount].str[count]='\0';
   //      fgets(str,10000,fp1);
        index[chrcount].num=chrcount;
-       cout<<chromosome[abs(chrcount-1)].size()<<endl;
+///       cout<<chromosome[abs(chrcount-1)].size()<<endl;
        chrcount++;
     }
     if(ch!='\n')
@@ -455,7 +459,7 @@ int main(int argc,char *argv[])
     ch=fgetc(fp1);
   }
   ch=fgetc(fp);
- cout<<"already load   sequence "<<endl;
+ //cout<<"already load   sequence "<<endl;
 //getchar();
 //  strcpy(contig[connum++].qname,qname)
   while(ch!=EOF)
@@ -815,6 +819,8 @@ read flag  and convert
   fclose(fp);
   fclose(fq);  
   fclose(fq1);
-//  cout<<tempcount<<endl;
+  fclose(fq2);
+  fclose(fp1);
+//  cout<<"detect "<<misassemblynum<<" misassembly error"<<endl;
   return 0;
 }
