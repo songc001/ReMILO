@@ -74,7 +74,7 @@ str=reference_path
 list=str.split('/')
 reference_name=list[len(list)-1]
 shutil.copyfile(reference_path,output_dir+'/ref/aln/'+reference_name)
-bwa_index_command = ' bwa index '  + output_dir +'/ref/aln/' + reference_name + ' 2>bwa.txt' 
+bwa_index_command = ' bwa index '  + output_dir +'/ref/aln/' + reference_name + ' 2>' + output_dir+'/ref/aln/bwa.txt' 
 
 print 'Running command: ' + bwa_index_command
 err = os.system(bwa_index_command)
@@ -85,7 +85,8 @@ list1 = contig_path.split('/')
 contig_name = list1[len(list1)-1]
 tempstr = contig_name.split('.')
 sam_name = tempstr[0] + '.sam'
-bwa_mem_command = ' bwa mem -a ' +  output_dir +'/ref/aln/' + reference_name + ' ' + contig_path + ' 1> ' + output_dir + '/ref/aln/' + sam_name  + ' 2>bwa.txt'
+bwa_mem_command = ' bwa mem -a ' +  output_dir +'/ref/aln/' + reference_name + ' ' + contig_path + ' > ' + output_dir + '/ref/aln/' + sam_name 
+bwa_mem_command += ' 2>'+output_dir+'/ref/aln/bwa.txt'
  
 print 'Running command: ' + bwa_mem_command
 err = os.system(bwa_mem_command)
