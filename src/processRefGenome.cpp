@@ -50,8 +50,8 @@ int convertInt(char str[])
    return sum;
 } 
 /*
-   1   represent  reverse  
-   0   represent  positive 
+  // 1   represent  reverse  
+  // 0   represent  positive 
 */
 int judgeDirect(int direct)
 {
