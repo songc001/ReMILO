@@ -50,7 +50,7 @@ typedef   struct  Index{
           int     num;
           }Index;
 
-//char  qname[1000000],qname1[1000000]; 
+//char  qname[1000000],q 
 
 //FILE  *fp,*fq,*fq1,*fp1;
 /*
