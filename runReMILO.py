@@ -96,7 +96,7 @@ if err !=0:
 #print '\n'
 #print 'Detect misassemble errors by reference genome ' 
 
-REF_command = 'processRefGenome ' + output_dir + '/ref/aln/' + sam_name  + ' ' +  output_dir + '/ref/aln/' + reference_name  + ' ' + output_dir + '/ref/locations.txt' 
+REF_command = 'processRefGenome ' + output_dir + '/ref/aln/' + reference_name  + ' ' +  output_dir + '/ref/aln/' + sam_name  + ' ' + output_dir + '/ref/locations.txt' 
 REF_command+= ' ' + output_dir + '/ref/subContig.fa'
 print 'Running command:' + REF_command
 err = os.system(REF_command)
@@ -148,6 +148,7 @@ print'''/////STEP1 DONE/////////////////////////////////////////////////////////
 print'''/////STEP2 STARTED//////////////////////////////////////////////////////////////////////////////////////////////////'''
 short_command = 'processShortReads ' + output_dir + '/short/aln/read1.sam'  + ' ' + output_dir + '/short/aln/read2.sam' + ' ' 
 short_command += output_dir + '/short/aln/subContig.fa '
+short_command += output_dir + '/short/aln/locations.txt '
 short_command+= ' ' + output_dir + '/short/misLocations.txt ' + output_dir + '/short/splitContigs.fa ' +output_dir + '/short/unsplitContigs.fa'
 print 'Running command:' + short_command
 err = os.system(short_command)
@@ -155,6 +156,7 @@ if err !=0:
        print 'ERROR: ' + 'Failed ro run shortread ' + os.strerror(err)
        exit(-1)
 print'''/////STEP2 DONE //////////////////////////////////////////////////////////////////////////////////////////////////'''
+shutil.copy2(output_dir+'/short/misLocations.txt','./output/')
 if args.longread:
       print'''/////STEP3 STARTED//////////////////////////////////////////////////////////////////////////////////////////////////'''
       
@@ -202,11 +204,6 @@ if args.longread:
              print 'ERROR: ' + 'Failed ro run  longread ' + os.strerror(err)
              exit(-1)
     #  print '\n'
+      print'''/////STEP4 DONE //////////////////////////////////////////////////////////////////////////////////////////////////'''
+      print '\n'
 
-shutil.copy2(output_dir+'/short/misLocations.txt','./output/')
-shutil.copy2(output_dir+'/short/splitContigs.fa','./output/')
-shutil.copy2(output_dir+'/short/unsplitContigs.fa','./output/')
-print'''/////STEP4 DONE //////////////////////////////////////////////////////////////////////////////////////////////////'''
-
-print '\n'
-print '%d MISASSEMBLY ERRORS DETECTED! REMILO SUCCESSFULLY FINISHED!' %miserr
