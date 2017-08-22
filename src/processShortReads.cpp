@@ -1,11 +1,12 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<math.h>
+#include<cstdio>
+#include<cstdlib>
+#include<cstring>
+#include<cmath>
 #include<unistd.h>
 #include<iostream>
 #include<fstream>
 #include<vector>
+#include<string>
 using namespace std;
 
 #define  percent  0.20
@@ -49,7 +50,11 @@ typedef   struct  Index{
           char    str[1000];
           int     num;
           }Index;
-
+typedef  struct BreakPoints{
+          string  name;
+          vector<int>  locations;
+}BreakPoints;
+vector<BreakPoints>  BPlist;
 //char  qname[1000000],q 
 
 //FILE  *fp,*fq,*fq1,*fp1;
@@ -383,7 +388,6 @@ void calMapRate(string cigar,Read  &read)
        }
        i++;
     }
- //   cout<<mc<<hc<<sc<<endl;
     read.length=length;
     read.maprate=(length-sc-hc)/(length*1.0);
     read.perfectrate=mc/( (length-sc-hc)*1.0 );    
@@ -407,7 +411,6 @@ void  assignRead(vector<string> data,Read &read)
 void dealRead(vector<string>  data)
 {
     Read  read;
-    cout<<data[0]<<endl;
     assignRead(data,read);
     if(read.maprate>MAPRATE  &&  read.perfectrate>PERRATE)
     {
@@ -422,7 +425,17 @@ void dealRead(vector<string>  data)
   //  getchar();
 
 }
-    
+void  OutputLoca(ofstream &misl)
+{
+   for(int i=0;i<BPlist.size();i++)
+   {
+      misl<<BPlist[i].name<<endl;
+      for(int j=0;j<BPlist[i].locations.size();j++)
+      {
+         misl<<BPlist[i].locations[j]<<endl;    
+      }
+   }
+}
 void  getRfile(ifstream &r1)
 {
     string buffer;
@@ -460,7 +473,7 @@ void  linkR1toC()
              }
           }
        }
-       part1:   true;//cout<<"sucesss"<<endl;
+       part1:   true;
            
     }          
 }
@@ -506,7 +519,37 @@ int judgeDirect(int direct)
     {
         return   0;
     }
-}/*
+}
+void DealLoca(ifstream  &L)
+{
+    BreakPoints  breakpoints;
+    vector<string>  data;
+    int loca;
+    string buffer="";
+    while(L.good())
+    {
+       getline(L,buffer);
+       if( buffer[0]=='>' )
+       {
+          if(breakpoints.locations.size()>0)
+          {
+             BPlist.push_back(breakpoints);
+             breakpoints.locations.clear();
+          }
+           breakpoints.name=buffer.erase(0,1);          
+       }
+       else
+       {
+          data=split(buffer,"	");
+          loca=( atoi(data[1].c_str())+atoi(data[2].c_str()) )/2;
+          breakpoints.locations.push_back(loca);
+          buffer.clear();
+       }
+    }
+    if(breakpoints.locations.size()>0)   BPlist.push_back(breakpoints);
+}
+
+/*     
 int    dealSeq(char seq[],char (&moseq)[10000000])
 {
  {
@@ -564,34 +607,24 @@ int main(int argc,char *argv[])
   {
      printf("contig file open error");
   }
-  if((fq=fopen(argv[4],"w"))==NULL)
-  {
-     printf("fq open error");
-  }
-  if((fq1=fopen(argv[5],"w"))==NULL)
-  {
-     printf("fq open error");
-  }
-  if((fq2=fopen(argv[6],"w"))==NULL)
-  {
-     printf("fq open error");
-  }
+  ifstream  L(argv[4]);
+  ofstream  misl(argv[5]);
+  ofstream  sc(argv[6]);
+  ofstream  uc(argv[7]);
 /*  if((fq1=fopen("subcontig","w"))==NULL)
   {
      printf("fq1 open error");
   }
 */
-//  cout<<"1"<<endl;
-  if(argc==1)
+  if(argc<7)
   {
-     printf("usage:");
-     printf("./shortread fq1 fq2 ");
+     exit(1);
   }
   ch=fgetc(fp2);
     tempstr[0]='\0';
   while(ch!=EOF)
   {
-    if(ch=='>')
+    if(ch=='>'&&ch!=EOF)
     {
          ch=fgetc(fp2);
          count=0;
@@ -604,7 +637,7 @@ int main(int argc,char *argv[])
          while(ch!='\n')
          {
             miscontig[miscount].contig1.name[count++]=ch;
-            ch=fgetc(fp);
+            ch=fgetc(fp2);
          }
          miscontig[miscount].contig1.name[count++]='\0';
          if(strcmp(tempstr,tempstr1)==0)
@@ -643,7 +676,7 @@ int main(int argc,char *argv[])
               miscontig[miscount].thirdcontig1.length=chromosome.size();
          }
 
-  //    cout<<miscontig[miscount].thirdcontig1.name<<endl; 
+ //     cout<<miscontig[miscount].thirdcontig1.name<<endl; 
        
          ch=fgetc(fp2);
          count=0;
@@ -681,7 +714,7 @@ int main(int argc,char *argv[])
      }
     
    }
-//  cout<<miscount<<endl;
+   DealLoca(L);
 //  cout<<"load "<<miscount<<" misassembled contig"<<endl;
  // getchar();
   ch=fgetc(fp);
@@ -937,88 +970,10 @@ read flag  and convert
           ch=fgetc(fp);
        
       }
-  }  
-  for(int i=0;i<miscount;i++)
-  {
-      for(int j=0;j<miscontig[i].contig1.read1.size();j++)
-      {
-        fputs(miscontig[i].contig1.read1[j].name,fq);
-        fputc(' ',fq);
-        sprintf(chpos,"%d",miscontig[i].contig1.read1[j].pos);
-        fputs(chpos,fq);
-        fputc('	',fq);
-      }
-      fputc('\n',fq);
-      for(int j=0;j<miscontig[i].contig2.read1.size();j++)
-      {
-        fputs(miscontig[i].contig2.read1[j].name,fq);
-        fputc(' ',fq);
-        sprintf(chpos,"%d",miscontig[i].contig2.read1[j].pos);
-        fputs(chpos,fq);
-        fputc('	',fq);
-      }
-      fputc('\n',fq);
-      for(int j=0;j<miscontig[i].thirdcontig1.read1.size();j++)
-      {
-        fputs(miscontig[i].thirdcontig1.read1[j].name,fq);
-        fputc(' ',fq);
-        sprintf(chpos,"%d",miscontig[i].thirdcontig1.read1[j].pos);
-        fputs(chpos,fq);
-        fputc('	',fq);
-      }
-      fputc('\n',fq);
-      for(int j=0;j<miscontig[i].thirdcontig2.read1.size();j++)
-      {
-        fputs(miscontig[i].thirdcontig2.read1[j].name,fq);
-        fputc(' ',fq);
-        sprintf(chpos,"%d",miscontig[i].thirdcontig2.read1[j].pos);
-        fputs(chpos,fq);
-        fputc('	',fq);
-      }
-      fputc('\n',fq);
-  }
-  for(int i=0;i<miscount;i++)
-  {
-      for(int j=0;j<miscontig[i].contig1.read2.size();j++)
-      {
-        fputs(miscontig[i].contig1.read2[j].name,fq);
-        fputc(' ',fq);
-        sprintf(chpos,"%d",miscontig[i].contig1.read2[j].pos);
-        fputs(chpos,fq);
-        fputc('	',fq);
-      }
-      fputc('\n',fq);
-      for(int j=0;j<miscontig[i].contig2.read2.size();j++)
-      {
-        fputs(miscontig[i].contig2.read2[j].name,fq);
-        fputc(' ',fq);
-        sprintf(chpos,"%d",miscontig[i].contig2.read2[j].pos);
-        fputs(chpos,fq);
-        fputc('	',fq);
-      }
-      fputc('\n',fq);
-      for(int j=0;j<miscontig[i].thirdcontig1.read2.size();j++)
-      {
-        fputs(miscontig[i].thirdcontig1.read2[j].name,fq);
-        fputc(' ',fq);
-        sprintf(chpos,"%d",miscontig[i].thirdcontig1.read2[j].pos);
-        fputs(chpos,fq);
-        fputc('	',fq);
-      }
-      fputc('\n',fq);
-      for(int j=0;j<miscontig[i].thirdcontig2.read2.size();j++)
-      {
-        fputs(miscontig[i].thirdcontig2.read2[j].name,fq);
-        fputc(' ',fq);
-        sprintf(chpos,"%d",miscontig[i].thirdcontig2.read2[j].pos);
-        fputs(chpos,fq);
-        fputc('	',fq);
-      }
-      fputc('\n',fq);
-  }
+  } 
+  OutputLoca(misl); 
   fclose(fp);
-  fclose(fp1);
-  fclose(fq);  
+  fclose(fp1); 
 //   cout<<"detect "<<misassemblynum<<" misassembly error"<<endl;;
 //  fclose(fq1);
 //  cout<<tempcount<<endl;
