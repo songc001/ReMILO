@@ -1,820 +1,712 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<math.h>
-#include<unistd.h>
+#include<cstdio>
+#include<cstring>
+#include<cstdlib>
 #include<iostream>
+#include<fstream>
 #include<vector>
+#include<string>
+#include<algorithm>
 using namespace std;
-typedef  struct  MyContig{
-        //   char  cigar[100000];
-           char  qname[100];
-           char  refname[100];
-           int   flag; 
-           int   direction;//the direction of contig,1 represent reverse
-           int   refpos1;
-           int   refpos2;
-        //   int   conpos;//0 represent pre,1 represent behind
-           int   conBegin;// the begin of subcontig in contig
-           int   conEnd;//the end of subcontig in contig
-           int   tolen;
-           int   cigarLen;
-}Contig;
-typedef   struct  Miscontig{
-          Contig  contig[2000];
-          int     flagnum[10];
-          int     kind;
-          int     num;
-          char    seq[10000000];
-}Miscontig;
-typedef   struct  Index{
-          char    str[1000];
-          int     num;
-          }Index;
-#define  percent  0.20
-//char  qname[1000000],qname1[1000000]; 
-
-FILE  *fp,*fq,*fq1,*fp1;
-Contig  g_contig1,g_contig2;
-//Mispos   mispos[10];
-int convertInt(char str[])
-{
-   int length;
-   int sum=0;
-
-   length=strlen(str);
-   for(int i=0; i<length; i++)
-   {
-      sum+=(str[i]-'0')*pow(10,(length-i-1));
-   }
-   return sum;
-} 
-/*
-  // 1   represent  reverse  
-  // 0   represent  positive 
-*/
-int judgeDirect(int direct)
-{
-    direct=direct/16;
-    direct=direct%2;
-    if(direct==1)
-    {
-         return  1;
-    }
-    else
-    {
-        return   0;
-    }
-}
-int    dealSeq(char seq[],char (&moseq)[10000000])
-{
-   int count=0;
-   int length;
-
-   length=strlen(seq);
-   for(int i=length-1;i>=0;i--)
-   {
-      switch(seq[i])
-      {
-        case 'A':moseq[length-i-1]='T';break;
-        case 'T':moseq[length-i-1]='A';break;
-        case 'G':moseq[length-i-1]='C';break;
-        case 'C':moseq[length-i-1]='G';break;
-      }
-   }
-   moseq[length]='\0';
-     // cout<<seq[0]<<endl;
-     // cout<<moseq[length-1]<<endl;
-     // getchar();
-   return 0;
-}
-     
-     
-   
-//int sort(
-int classify(Contig (&contig)[200000],int num,Miscontig  &(miscontig))
-{
-  int kind=0;
-  int count[10000];
-  int beginsum[10000],endsum[10000];
-  int a[10000];
-  int best;
-  Contig tempcontig;
-  for(int i=0;i<num;i++)
-  {
-    contig[i].flag=0;
-  }
-  for(int i=num-1;i>0;i--)
-  {
-    for(int j=0;j<i;j++)
-    {
-      if(abs(contig[j].conBegin-contig[j].conEnd)<abs(contig[j+1].conBegin-contig[j+1].conEnd))
-      {
-        tempcontig=contig[j];
-        contig[j]=contig[j+1];
-        contig[j+1]=tempcontig;
-      }
-    }
-  }    
-  for(int i=0;i<num;i++)
-  {
-    if(contig[i].flag==0)
-    {
-      contig[i].flag=kind+1;
-      for(int j=i+1;j<num;j++)
-      {
-        if(contig[j].flag==0)
-        {
-          if(contig[i].conEnd<contig[j].conBegin)
-          {
-            contig[j].flag=0;
-          }
-          if(contig[i].conBegin>contig[j].conEnd)
-          {
-            contig[j].flag=0;
-
-          }
-          if((contig[i].conBegin<=contig[j].conBegin)&&(contig[i].conEnd<=contig[j].conEnd)&&(contig[i].conEnd>=contig[j].conBegin))
-          {
-             
-             if( ( abs(contig[i].conEnd-contig[j].conBegin)<(contig[i].cigarLen*percent) )&&( abs(contig[i].conEnd-contig[j].conBegin)<(contig[i].cigarLen*percent) ) )
-             {
-               contig[j].flag=0;
-             }
-             else
-             {
-               contig[j].flag=kind+1;
-             }
-          }
-          if((contig[i].conBegin>=contig[j].conBegin)&&(contig[i].conEnd>=contig[j].conEnd)&&(contig[i].conBegin<contig[j].conEnd)) 
-          {
-          
-             if( (abs(contig[i].conBegin-contig[j].conEnd)<(contig[i].cigarLen*percent) )&&( abs(contig[i].conBegin-contig[j].conEnd)<(contig[i].cigarLen*percent) ) )
-             {
-               contig[j].flag=0;
-             }
-             else
-             {
-               contig[j].flag=kind+1;
-             }
-          }
-          if((contig[i].conBegin>contig[j].conBegin)&&(contig[i].conEnd<contig[j].conEnd))
-          {
-             contig[j].flag=kind+1;
-          }
-          if((contig[i].conBegin<contig[j].conBegin)&&(contig[i].conEnd>contig[j].conEnd))
-          {
-             contig[j].flag=kind+1;
-          }
-        }
-      }
-    kind++;
-    }
-  }
- /* for(int j=0;j<num;j++)
-  {
-    cout<<contig[j].flag<<endl;
-    cout<<contig[j].conBegin<<" "<<contig[j].conEnd<<endl;
-  }
-*/
-  for(int i=0;i<=10000;i++)
-  {
-     count[i]=0;
-     beginsum[i]=0;
-     endsum[i]=0;
-     a[i]=0;
-  }
-  miscontig.kind=0;
-  for(int i=0;i<num;i++)
-  {
-     for(int j=1;j<=kind;j++)
-     {
-       if(contig[i].flag==j&&a[j]!=1)
-       {
-          a[j]=1;
-          miscontig.contig[miscontig.kind++]=contig[i];
-       }
-     }
-  }
-if(kind>1)
-{
-  for(int i=miscontig.kind-1;i>0;i--)
-  {
-     for(int j=0;j<i;j++)
-     {
-        if(miscontig.contig[j].conBegin>miscontig.contig[j+1].conBegin)
-        {
-           tempcontig=miscontig.contig[j];
-           miscontig.contig[j]=miscontig.contig[j+1];
-           miscontig.contig[j+1]=tempcontig;
-          //cout<<'1'<<endl;
-        }
-     }
-   }
-}
-return kind;
-}  
  
-int judgeBypos(Contig (&contig)[200000],int num,Miscontig  &(miscontig),int misnum)
+#define maxBuflen  10000000
+#define distance   85
+#define maxQuality 1
+#define percent   0.3
+typedef struct Chr {
+     string name;
+     string sequence;
+}Chr;
+typedef struct Op{
+     char type;
+     int length;
+}Op;//storage the type of cigar;
+typedef struct subContig{
+     int refpos;
+     int conpos;
+     int direction;
+     int length;
+     string chrName;
+     string sequence;
+}subContig;
+typedef struct Contig{
+     string  name;
+     int     length;
+     vector<subContig>  subContigList;
+}Contig;
+typedef struct Seg{
+     string refname;
+     int begin;
+     int end;
+     int refbegin;
+     int refend;
+     int direction;
+//     bool type;
+     double quality;
+     bool  flag;//indels(true) or struction variation(0);
+     int kind;
+}Seg;
+typedef struct MisSeg{
+     Seg   seg1;
+     Seg   seg2;
+}MisSeg;
+/*
+typedef struct Segment{
+     int pos1;
+     int pos2;
+     int refpos1;
+     int refpos2;
+     int direction;
+     double quality;
+}Segment;*/
+typedef struct TSegment{
+     vector<Seg>  seglist;
+     vector<Seg>  indelseglist;
+     double quality;
+}TSegment;
+vector<Chr>  reference;  
+vector<Contig>   contiglist;
+vector<Op> oplist;
+//vector<Segment> segmentlist;
+vector<TSegment>  tsegmentlist; 
+int COUNT=0;
+
+string GetChrName(string str)
 {
-   int lo_flag=0;
-   int temp1,temp2;
-   int temp[4];
-   int distance=0;
-   int lo_dis;
-   int  j=0;
-   if(classify(contig,num,miscontig)>1)
+   string name;
+   if(str[0]!='>')    
    {
-     for(int i=0; i<miscontig.kind-1; i++)
-     {      
-        j=i+1;
-    //    cout<<contig[i].refpos1<<contig[i].refpos2<<endl;
-        if(strcmp(contig[i].refname,contig[j].refname)==0)
-        {
-           if(contig[i].flag!=contig[j].flag&&contig[j].flag!=0&&contig[j].flag!=0)
-           {
-              if((contig[i].refpos1<contig[j].refpos1)&&(contig[i].refpos2<contig[j].refpos2))
-              { 
-                  if((contig[i].direction==0)&&(contig[j].direction==0))
-                  {
-              // cout<<i<<" "<<contig[i].direction<<" "<<j<<" "<<contig[j].direction<<endl;
-                    distance=abs((contig[i].refpos2-contig[j].refpos1));
-               //cout<<"mark"<<endl;
-                  }
-                  if((contig[i].direction==0)&&(contig[j].direction==1))
-                  {
-                    distance=abs((contig[i].refpos2-contig[j].refpos2));
-                  }
-                  if((contig[i].direction==1)&&(contig[j].direction==0))
-                  {
-                    distance=abs((contig[i].refpos1-contig[j].refpos1));
-                  }
-                  if((contig[i].direction==1)&&(contig[j].direction==1))
-                  {
-                    distance=abs((contig[i].refpos1-contig[j].refpos2));
-                  }
-              }
-              if((contig[i].refpos1>contig[j].refpos1)&&(contig[i].refpos2>contig[j].refpos2))
-              {
-                  if((contig[j].direction==0)&&(contig[i].direction==0))
-                  {
-             // cout<<i<<" "<<contig[i].direction<<" "<<j<<" "<<contig[j].direction<<endl;
-                    distance=abs((contig[j].refpos2-contig[i].refpos1));
-          //  cout<<"mark"<<endl;
-                  }
-                  if((contig[j].direction==0)&&(contig[i].direction==1))
-                  {
-                    distance=abs((contig[j].refpos2-contig[i].refpos2));
-                  }
-                  if((contig[j].direction==1)&&(contig[i].direction==0))
-                  {
-                    distance=abs((contig[j].refpos1-contig[i].refpos1));
-                  }
-                  if((contig[j].direction==1)&&(contig[i].direction==1))
-                  {
-                    distance=abs((contig[j].refpos1-contig[i].refpos2));
-                  }
-              }
-              if(distance>85)
-              {
-                lo_flag=1;
-                lo_dis=distance;
-              }
-           }
-        }
-        else
-        {
-           lo_flag=1;
-           lo_dis=distance;
-        }
-     }
-  // cout<<contig[i].direction<<endl;  
+      cout<<"The name of  reference is not correct"<<endl;
+      exit(1);
    }
-return lo_flag;     
+   for(int i=1;i<str.size();i++)
+   {
+      if(str[i]=='	'||str[i]==' ')
+      {
+         break;
+      }
+      name+=str[i];
+   }
+   return name;
+}
+void getFfile(ifstream  &f)
+{
+    string buffer;
+    string sequence;
+    Chr    chr;
+    while(f.good())
+    {
+       getline(f,buffer);
+      // cout<<'1'<<endl;
+       
+       if(buffer[0]=='>')
+       {
+          if(chr.sequence!="")
+          {
+             reference.push_back(chr);
+             chr.name.clear();
+             chr.sequence.clear();
+          }
+          chr.name=GetChrName(buffer);
+       }
+       else
+       {
+          chr.sequence+=buffer;
+          buffer.clear();
+       }
+    }
+    reference.push_back(chr);
 }
 
-int  dealCigar( int &pre, int  &be, int &length,char  cigar[],Contig &contig)  //length represent length of real seq
-  {
-      char  str[100];
-      int   num;
-      int   sum;
-      int   i=0;//  cigar
-      int   k=0;//  str
-      int   count=0;;// number of H and S
-      int   preflag=0;
-      int   beflag=0;
-      int   flag=0;
-      int   temp;
-      contig.cigarLen=0;
-      be=pre=0;
-      contig.conBegin=0;
-      contig.conEnd=0;
-      contig.tolen=0;
-     // cout<<cigar<<endl;
-      str[0]='\0';
-      while(cigar[i]!='\0')
-      {
-	if(cigar[i]>=48&&cigar[i]<=57)
-        {
-          str[k++]=cigar[i];
-        }
-        else
-        {
-          str[k]='\0';
-          k=0;
-          num=convertInt(str);
-       //   cout<<num;
-        //  cout<<cigar[i];
-          if(cigar[i]=='H')
-          {  
-             if(cigar[i+1]!='\0')
-             {
-               contig.conBegin+=num;
-             }
-             else
-             {
-               contig.conEnd+=num;
-             }
-          }
-          if(cigar[i]=='S')
-          {
-             if(cigar[i+1]!='\0')
-             {
-               contig.conBegin+=num;
-             }
-             else
-             {
-               contig.conEnd+=num;
-             }
-          }
-          if(cigar[i]=='M'||cigar[i]=='I'||cigar[i]=='='||cigar[i]=='X')
-          {
-             contig.cigarLen+=num;
-          } 
-          if(cigar[i]!='D')
-          { 
-            contig.tolen+=num;
-          }
-          str[0]='\0';
-        }
-        i++;
-      }
-      if(contig.direction==0)
-      {
-          contig.conEnd=contig.tolen-contig.conEnd-1;
-      }
-      if(contig.direction==1)
-      {
-          temp=contig.conBegin;
-          contig.conBegin=contig.conEnd;
-          contig.conEnd=contig.tolen-temp-1;
-      }
-     // cout<<contig.qname<<endl;
-     // cout<<contig.conBegin<<" "<<contig.conEnd<<endl;
-    //  getchar();
-      return 0;
- }
-
-int   getPosOfgenome(int &length,Contig &contig)
- {
-    int i;
-    if(contig.direction==0)
+int JudgeDirection(int direction)
+{
+    return (direction>>4)%2;
+}
+vector<string>  split(string str,const char * delim)
+{
+    vector<string> data;
+    char *p;
+    char buffer[maxBuflen];
+    strcpy(buffer,str.c_str());
+    p=strtok(buffer,delim);
+    while(p)
     {
-     contig.refpos2=contig.refpos1+contig.tolen;
+       data.push_back(p);
+       p=strtok(NULL,delim);
+    }
+    return data;
+}
+void AssignContig(Contig  &contig,vector<string> data)
+{
+   						
+}
+void ClearContig(Contig   &contig)
+{
+    contig.name="";
+    contig.length=0;
+    contig.subContigList.clear();
+}
+void AssignSubContig(subContig  &subcontig,vector<string> data)
+{
+    subcontig.direction=JudgeDirection(atoi(data[1].c_str()));
+    subcontig.chrName=data[2];
+    subcontig.refpos=atoi(data[3].c_str());
+    
+}
+void ClearSubContig(subContig  &subcontig)
+{
+    subcontig.refpos=0;
+    subcontig.conpos=0;
+    subcontig.direction=0;
+    subcontig.length=0;
+    subcontig.chrName="";
+    subcontig.sequence="";
+}
+
+double  judge_1(double a)
+{
+    if(a==1.0)   return 1.0;
+    else
+       return 0;   
+}
+void   AssignDirection(string direc,vector<Seg>  &seglist)
+{
+    int direction;
+    direction=JudgeDirection( atoi( direc.c_str() ) );
+    for(int i=0;i<seglist.size();i++)
+    {
+       seglist[i].direction=direction;
+    }
+}
+double CalcuQua(int M,int indel)
+{
+    return  M/( (M+indel)*1.0 );
+}
+vector<int>  CalcuCigarInfo(vector<string> data)
+{
+    vector<int> counts(10,0);//counts[0]: total length of  contig;counts[1]:the length of refgenome which is aligned by contig;counts[3]the number of 'I','D','=',
+    //vector<char> clip;//counts[2]:the number of 'M';
+    Seg  seg;
+    char ch; 
+    int length;
+    int refpos;
+    TSegment tsegment;
+    Op  op;
+    vector<Seg>  seglist;
+    vector<Seg>  indelseglist;
+    refpos=atoi(data[3].c_str());
+    seg.begin=counts[0];
+    seg.quality=0;
+    counts[1]=refpos;
+    seg.refbegin=counts[1];
+    tsegment.quality=0;
+    seg.flag=false;
+    for(int i=0;i<oplist.size()-1;i++)//deal n-1 var;
+    {
+       ch=oplist[i].type;
+       length=oplist[i].length;
+       if(ch=='M')
+       {
+          counts[0]+=length;
+          counts[1]+=length;
+          counts[2]+=length;
+       }
+       if(ch=='I')
+       {
+          counts[0]+=length;
+          counts[3]+=length;
+          if(length>distance)
+          {
+             seg.end=counts[0]-length;
+             seg.quality=CalcuQua(counts[2],counts[3]-length);
+             seg.flag=true;
+             seg.refend=counts[1];
+             seg.refname=data[2];
+             indelseglist.push_back(seg);
+             counts[2]=counts[3]=0;
+             seg.begin=counts[0];
+             seg.flag=true;
+             seg.refbegin=counts[1]+1;
+            // seg.type=true;
+          }
+       }
+       if(ch=='D')
+       {
+          // data[0]+=length;
+          counts[1]+=length;
+          counts[3]+=length;
+          if(length>distance)
+          {
+           //  cout<<length<<endl;
+             seg.end=counts[0];
+             seg.quality=CalcuQua(counts[2],counts[3]-length);
+             seg.flag=true;
+             seg.refend=counts[1]-length;
+             seg.refname=data[2];
+             indelseglist.push_back(seg);
+             counts[2]=counts[3]=0;
+             seg.begin=counts[0]+1;
+             seg.flag=true;
+             seg.refbegin=counts[1];
+          }
+       }
+       if(ch=='S'||ch=='H')
+       {
+          counts[0]+=length;
+          if(counts[0]==length)
+          {
+             seg.begin=counts[0];
+            // seg.quality=CalcuQua(counts[2],counts[3]-length);
+             seg.flag=false;
+             seg.refbegin=counts[1];
+          }
+          else
+          {
+             seg.end=counts[0]-length;
+             seg.quality=CalcuQua(counts[2],counts[3]-length);
+             if(seg.flag!=true)   seg.flag=false;
+             seg.refend=counts[1];
+             seg.refname=data[2];
+             if(seg.flag==true)   
+             {
+                indelseglist.push_back(seg);
+             }
+             else
+             {
+                seglist.push_back(seg);
+             }
+             counts[2]=counts[3]=0;
+             seg.begin=counts[0];
+             seg.flag=false;
+             seg.refbegin=counts[1]+1;
+          }
+       }
+       if(ch=='=')
+       {
+          counts[0]+=length;
+          counts[1]+=length;
+          counts[2]+=length;
+       }          
+       if(ch=='X')
+       {
+          counts[0]+=length;
+          counts[1]+=length;
+          counts[3]+=length;
+          cout<<data[0]<<endl;///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+          cout<<"X"<<endl;////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+          getchar();
+       }   
+    } 
+    op=oplist[oplist.size()-1];
+    if(op.type=='H'||op.type=='S')
+    {
+       seg.end=counts[0];
+       seg.quality=CalcuQua(counts[2],counts[3]);
+       if(seg.flag!=true)      seg.flag=false;
+       seg.refend=counts[1];
+       seg.refname=data[2];
+       if(seg.flag==true)
+       {
+          indelseglist.push_back(seg);
+       }
+       else
+       {
+          seglist.push_back(seg);
+       }
+       counts[2]=counts[3]=0;
+       counts[0]+=op.length;
     }
     else
     {
-      contig.refpos2=contig.refpos1+contig.tolen;
-    }
-  //  cout<<contig.refpos1<<" "<<contig.refpos2<<" "<<length<<endl;
-    return 0;
- }
-            
-//output  subcontigs  
-int main(int argc,char *argv[])
-{ 
-  char ch;
-  char chflag[10];
-  char chpos[20];
-  char str[1000000];
-  char tempnum[1000];
-  char qname[100], qname1[100],refname[100];
-  char cigar[100000],sequence[10000000];
-  int  flag;
-  int  pos;
-  int  con_length;
-  int  k;
-  int  count, mark, connum=0,misnum=0; 
-  int tempcount=0; 
-  int  precigar[2000],becigar[2000],lencigar[2000];
-  vector<char>  chromosome[100]; 
-  int chrcount=0,chrnum=0;
-  Index   index[3000];
-  Contig contig[200000];
-  Miscontig  miscontig;
-
-  if((fp=fopen(argv[1],"r"))==NULL)
-  {
-       cout<<"don't exit sam file:"<<argv[1]<<endl;
-  }
-  if((fp1=fopen(argv[2],"r"))==NULL)
-  {
-       cout<<"don't exit fasta file:"<<argv[2]<<endl;
-  }
-  if((fq=fopen(argv[3],"w"))==NULL)
-  {
-     printf("fq open error");
-  }
-  if((fq1=fopen(argv[4],"w"))==NULL)
-  {
-     printf("fq1 open error");
-  }
-  //cout<<"load  sequence"<<endl;
-  ch=fgetc(fp1);
-  while(ch!=EOF)
-  {
-    if(ch=='>')
-    {
-       ch=fgetc(fp1);
-       count=0;
-       while(ch!='\n')
+       counts[0]+=op.length;
+       counts[1]+=op.length;
+       counts[2]+=op.length;
+       seg.end=counts[0];
+       seg.quality=CalcuQua(counts[2],counts[3]);
+       seg.refend=counts[1];
+       seg.refname=data[2];
+       if(seg.flag==true)
        {
-          index[chrcount].str[count++]=ch;
-          ch=fgetc(fp1);
+          indelseglist.push_back(seg);
        }
-       index[chrcount].str[count]='\0';
-  //      fgets(str,10000,fp1);
-       index[chrcount].num=chrcount;
-  //     cout<<chromosome[abs(chrcount-1)].size()<<endl;
-       chrcount++;
+       else
+       {
+          seglist.push_back(seg);
+       }
+       counts[2]=counts[3]=0;
+       counts[0]+=op.length;
     }
-    if(ch!='\n')
+ //   if(tsegment.quality!=1.0) tsegment.quality=CalcuQua(data[1],data[2]);
+    if(!seglist.empty())    AssignDirection(data[1],seglist);
+    if(!indelseglist.empty())  AssignDirection(data[1],indelseglist);
+    if(!seglist.empty()||!indelseglist.empty())
     {
-       chromosome[chrcount-1].push_back(ch);
+       tsegment.seglist=seglist;
+       tsegment.indelseglist=indelseglist;
+ //      tsegment.quality=0;//need to be modified;
+       tsegmentlist.push_back(tsegment);
     }
-    ch=fgetc(fp1);
-  }
-  ch=fgetc(fp);
- //cout<<"already load   sequence "<<endl;
-//getchar();
-//  strcpy(contig[connum++].qname,qname)
-  while(ch!=EOF)
-  {
-      if(ch=='@')
+    oplist.clear();
+    seglist.clear();
+    indelseglist.clear();
+    return  counts;      
+}
+bool a_less_b(const Seg &a,const Seg &b)
+{
+    return a.begin<b.begin;
+}
+void ConvertCigar(string cigar)
+{
+    vector<int>  data;
+    int i=0;
+    string str;
+    Op  op;
+   //      cout<<"w"<<endl;
+    while(i<cigar.size())
+    {
+       if(cigar[i]>=48&&cigar[i]<=57)
+       {
+          str+=cigar[i];
+       }
+       else
+       {
+          op.type=cigar[i];
+          op.length=atoi(str.c_str());
+          oplist.push_back(op);
+          str="";
+       }
+       i++; 
+    }
+   // cout<<oplist.size()<<endl;
+}
+int ClassifySeg(Seg  seg1,Seg  seg2)
+{
+   int  samelen=0;
+   int  seg1_len=0;
+   int  seg2_len=0;
+   samelen=abs(seg1.end-seg2.begin);
+   seg1_len=abs(seg1.end-seg1.begin)*percent;
+   seg2_len=abs(seg2.end-seg2.begin)*percent;
+   if(seg2.kind!=0)    return seg2.kind;
+   if(seg1.end<seg2.begin) return 0;
+   if(seg1.begin>seg2.end)   return 0;
+   if( (seg1.begin<=seg2.begin)&&(seg1.end<=seg2.end)&&(seg1.end>=seg2.begin) )
+   {
+      if(samelen<seg1_len&&samelen<seg2_len)   return 0;
+      else
       {
-        fgets(str,1000,fp);
-        ch=fgetc(fp);
+         return seg1.kind;
+      }
+   }
+   if( (seg1.begin>=seg2.begin)&&(seg1.end>=seg2.end)&&(seg1.end<seg2.begin) )
+   {  
+      if(samelen<seg1_len&&samelen<seg2_len)   return 0;
+      else
+      {
+         return seg1.kind;
+      }
+   }
+   if( (seg1.begin>seg2.begin)&&(seg1.end<seg2.end) )
+   {
+      return  seg1.kind;
+   }
+   if( (seg1.begin<seg2.begin)&&(seg1.end>seg2.end) )
+   {
+      return  seg1.kind;
+   }
+}
+vector<Seg>  MergeSeg(vector<Seg>  sortseglist,int kind)
+{
+    vector<Seg>  fseglist;
+    Seg  tempseg;
+    for(int i=1;i<=kind;i++)
+    {
+       tempseg.begin=tempseg.end=0;
+       for(int j=0;j<sortseglist.size();j++)
+       {
+          if(sortseglist[j].kind==i && abs(sortseglist[j].end-sortseglist[j].begin)>abs(tempseg.end-tempseg.begin) )
+          {
+             tempseg=sortseglist[j];
+          }
+  //        cout<<'d'<<endl;
+       }
+       fseglist.push_back(tempseg);
+    }
+//    cout<<'e'<<endl;
+    sort(fseglist.begin(),fseglist.end(),a_less_b);
+//    cout<<'s'<<endl;
+    return fseglist;
+}
+    
+vector<MisSeg>  JudgeMis(vector<Seg>  fseglist)
+{
+   MisSeg  misseg;
+   vector<MisSeg>  misseglist;
+   for(int i=0;i<fseglist.size()-1;i++)
+   {
+      if(fseglist[i].refname!=fseglist[i+1].refname)   
+      {
+         misseg.seg1=fseglist[i];
+         misseg.seg2=fseglist[i+1];
+         misseglist.push_back(misseg);
       }
       else
       {
-          k=0;    
-          while(ch!='	')
-          {
-            qname[k++]=ch;
-            ch=fgetc(fp);
-          }
-          qname[k]='\0';
-/*
-read flag  and convert
-*/
-          k=0;
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-            chflag[k++]=ch;
-            ch=fgetc(fp);
-          }
-          chflag[k]='\0';
-          flag=convertInt(chflag);
-/* 
- read  refname
-*/ 
-          k=0;
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-            refname[k++]=ch;
-            ch=fgetc(fp);
-          }
-          refname[k]='\0';
-/*
-  contig's pos on  the reference  genome
-*/          
-          k=0;
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-            chpos[k++]=ch;
-            ch=fgetc(fp);
-          }
-          chpos[k]='\0';
-          pos=convertInt(chpos);
-
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-            ch=fgetc(fp);
-          }
-  //        cout<<"load cigar"<<endl;
-/*
- cigar
-*/          
-          k=0;
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-             cigar[k++]=ch;
-             ch=fgetc(fp);
-          }
-          cigar[k]='\0';  
-          /*
-          save info
-*/
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-             ch=fgetc(fp);
-          }
-          
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-             ch=fgetc(fp);
-          }
-       
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-             ch=fgetc(fp);
-          }
-
-          k=0;
-          ch=fgetc(fp);
-          while(ch!='	')
-          {
-             sequence[k++]=ch;
-             ch=fgetc(fp);           
-          }
-          sequence[k]='\0';
-      //      cout<<strlen(sequence)<<endl;
-      //      getchar();
-       //   cout<<"analyze"<<endl;
-          if(strcmp(qname,qname1)!=0)
-          {
-             if( (connum>=2)&&(judgeBypos(contig,connum,miscontig,misnum)==1) )
-             {
-           //    cout<<"input"<<endl; 
-               tempcount++;
-               fputc('>',fq);        
-               fputs(contig[0].qname,fq);
-               fputc('\n',fq);
-               for(int i=0;i<(miscontig.kind-1)&&miscontig.contig[i].flag!=0;i++)
-               {
-               sprintf(tempnum,"%d",miscontig.contig[i].conBegin);
-               fputs(tempnum,fq);
-               fputc('	',fq);
-               sprintf(tempnum,"%d",miscontig.contig[i].conEnd);
-               fputs(tempnum,fq);
-               fputc('	',fq);
-               sprintf(tempnum,"%d",miscontig.contig[i+1].conBegin);
-               fputs(tempnum,fq);
-               fputc('	',fq);
-               sprintf(tempnum,"%d",miscontig.contig[i+1].conEnd);
-               fputs(tempnum,fq);
-               fputc('\n',fq);
-               }
-               
-               for(int i=0;i<miscontig.kind;i++)
-               {
-               //    subcontig1
-                 fputc('>',fq1);
-                 fputs(contig[0].qname,fq1);
-                 fputc('_',fq1);
-                 sprintf(tempnum,"%d",i);
-                 fputs(tempnum,fq1);
-            //     fputs("",fq1);
-                 fputc('\n',fq1);
-             //    cout<<miscontig.contig[i].qname<<endl;
-             //    cout<<strlen(miscontig.seq)<<endl;
-             //    cout<<miscontig.seq<<endl;
-            //     cout<<miscontig.contig[i].conBegin<<" " <<miscontig.contig[i].conEnd<<endl;
-              //   getchar();
-                 for(int j=miscontig.contig[i].conBegin;j<=miscontig.contig[i].conEnd;j++)
-                 {
-                   //   cout<<miscontig.seq[j]<<endl;
-                  //  getchar()
-                    fputc(miscontig.seq[j],fq1);
-                    if(((j-miscontig.contig[i].conBegin+1)%60)==0&&(j!=miscontig.contig[i].conBegin))
-                    {
-                       fputc('\n',fq1);
-                    }
-                 }
-                 if(((miscontig.contig[i].conEnd-miscontig.contig[i].conBegin+1)%60)!=0)
-                 {
-                    fputc('\n',fq1);
-                 }
-            //       third contig
-                 if(i<miscontig.kind-1)
-                 {
-             //       cout<<"tts"<<endl; 
-                    fputc('>',fq1);
-                    fputs(contig[0].qname,fq1);
-          //          cout<<"tts"<<endl;
-                    fputc('_',fq1); 
-                    sprintf(tempnum,"%d",i);
-                    fputs(tempnum,fq1);
-                    fputs("_b",fq1);
-                    fputc('\n',fq1);
-             //       cout<<'F';
-                    for(int k=0;k<chrcount;k++)
-                    {
-                       if(strcmp(index[k].str,miscontig.contig[i].refname)==0)
-                       {
-                          chrnum=index[k].num;
-                          break;
-                       }
-                    }
-                    if(miscontig.contig[i].direction==0)
-                    {
-                       if(miscontig.contig[i].refpos2+1000<chromosome[chrnum].size())
-                       {
-                          for(int j=miscontig.contig[i].refpos2;j<miscontig.contig[i].refpos2+1000;j++)
-                          {
-                   
-                            fputc(chromosome[chrnum].at(j),fq1);
-                            if(((j-miscontig.contig[i].refpos2+1)%60)==0&&(j!=miscontig.contig[i].refpos2+1000))
-                            {
-                              fputc('\n',fq1);
-                            }
-                          }
-                       }
-                       else
-                       {
-                          for(int j=miscontig.contig[i].refpos2;j<chromosome[chrnum].size();j++)
-                          {
-                            fputc(chromosome[chrnum].at(j),fq1);
-                            if(((j-miscontig.contig[i].refpos2+1)%60)==0&&(j!=chromosome[chrnum].size()))
-                            {
-                              fputc('\n',fq1);
-                            }
-                          }
-                       }
-                          
-                    }
-                    else
-                    {
-                       if(miscontig.contig[i].refpos1>1000)
-                       {  
-    //                     cout<<miscontig.contig[i].refname<<endl; 
-                         for(int j=miscontig.contig[i].refpos1-1000;j<miscontig.contig[i].refpos1;j++)
-                         {
-                            fputc(chromosome[chrnum].at(j),fq1);
-                            if((j-miscontig.contig[i].refpos1+1001)%60==0&&(j!=(miscontig.contig[i].refpos1)))
-                            {
-                              fputc('\n',fq1);
-                            }
-                         }
-                       }
-                       else
-                       {
-                 ///        cout<<"H"<<endl;
-                         for(int j=1;j<miscontig.contig[i].refpos1;j++)
-                         {
-                            fputc(chromosome[chrnum].at(j),fq1);
-                            if((j+1)%60==0&&(j!=(miscontig.contig[i].refpos1)))
-                            {
-                              fputc('\n',fq1);
-                            }
-                         }
-                       }
-                         
-                    }
-                    fputc('\n',fq1); 
-    //                cout<<"second"<<endl;
-                    fputc('>',fq1);
-                    fputs(contig[0].qname,fq1);
-                    fputc('_',fq1);
-                    sprintf(tempnum,"%d",i+1);
-                    fputs(tempnum,fq1);
-                    fputs("_f",fq1);
-                    fputc('\n',fq1);
-                        
-                    for(int k=0;k<chrcount;k++)
-                    {
-                       if(strcmp(index[k].str,miscontig.contig[i+1].refname)==0)
-                       {
-                          chrnum=index[k].num;
-                          break;
-                       }
-                    }
-            //        cout<<"cao"<<endl;
-                    if(miscontig.contig[i+1].direction==0)
-                    {
-                       if(miscontig.contig[i+1].refpos1>1000)
-                       {
-      //                   cout<<"L"<<miscontig.contig[i+1].refpos1<<endl;
-      //                   cout<<chromosome[chrnum].size()<<endl;
-                          for(int j=miscontig.contig[i+1].refpos1-1000;j<=miscontig.contig[i+1].refpos1;j++)
-                          {
-                            fputc(chromosome[chrnum].at(j),fq1);
-                            if(((j-miscontig.contig[i+1].refpos1+1001)%60)==0&&(j!=(miscontig.contig[i+1].refpos1)))
-                            {
-                              fputc('\n',fq1);
-                            }
-                          }
-                          
-                       }
-                       else
-                       {
-        //                  cout<<"L2"<<endl;
-                        
-                          for(int j=0;j<miscontig.contig[i+1].refpos1;j++)
-                          {
-                            fputc(chromosome[chrnum].at(j),fq1);
-                            if(((j+1)%60)==0&&(j!=miscontig.contig[i].refpos1))
-                            {
-                              fputc('\n',fq1);
-                            }
-                          }
-                       }
-                          
-                    }
-                    else
-                    {                  
-              
-                       if(miscontig.contig[i+1].refpos2+1000<chromosome[chrnum].size())
-                       {
-                          for(int j=miscontig.contig[i+1].refpos2;j<=miscontig.contig[i+1].refpos2+1000;j++)
-                          {
-                            fputc(chromosome[chrnum].at(j),fq1);
-                            if(((j-miscontig.contig[i+1].refpos2+1)%60)==0&&(j!=(miscontig.contig[i+1].refpos2+1000)))
-                            {
-                              fputc('\n',fq1);
-                            }
-                          }
-                       }
-                       else
-                       {
-                          for(int j=miscontig.contig[i+1].refpos2;j<chromosome[chrnum].size();j++)
-                          {
-                            fputc(chromosome[chrnum].at(j),fq1);
-                            if(((j-miscontig.contig[i+1].refpos2+1)%60)==0&&(j!=chromosome[chrnum].size()))
-                            {
-                              fputc('\n',fq1);
-                            }
-                          }
-                       }
-                          
-                    }
-                    fputc('\n',fq1); 
- 
-                 }
-                 
-               }     
-                
-               
-             }
-             connum=0;
-          }
-          contig[connum].direction=judgeDirect(flag);
-          strcpy(contig[connum].qname,qname);
-          strcpy(contig[connum].refname,refname);
-    //      cout<<"dealcigar"<<endl;
-          dealCigar(precigar[connum],becigar[connum],lencigar[connum],cigar,contig[connum]);
-      //    cout<<"getpos"<<endl;
-          contig[connum].refpos1=pos;
-          getPosOfgenome(lencigar[connum],contig[connum]);
-   //       cout<<contig[connum].refpos1<<contig[connum].refpos2<<endl;
-          if(connum==0)
-          {
-          //  cout<<contig[0].qname<<' '<<strlen(sequence)<<' '; 
-            if(contig[connum].direction==1)
-            {
-               dealSeq(sequence,miscontig.seq);
-            }
-            else
-            {
-               strcpy(miscontig.seq,sequence);
-            }
-       //     cout<<"tolen "<<contig[0].tolen<<endl;
-        //    cout<<"selen"<<strlen(sequence)<<endl;
-       //     getchar();
-          }
-          if(contig[connum].cigarLen>100)
-          {
-            connum++;
-          }
-     //    cout<<qname<<endl; 
-          strcpy(qname1,qname);
-          fgets(str,1000000,fp);   
-          ch=fgetc(fp);
-//          cout<<connum<<endl;
-//          cout<<contig[connum-1].qname<<endl;
+         if(abs(fseglist[i].refend-fseglist[i+1].refbegin)>distance)  
+         {
+            misseg.seg1=fseglist[i];
+            misseg.seg2=fseglist[i+1];
+            misseglist.push_back(misseg);
+         }
       }
-  }  
-  fclose(fp);
-  fclose(fq);  
-  fclose(fq1);
-//  cout<<tempcount<<endl;
-  return 0;
+   }
+   return misseglist;
 }
+void FormatOutputBreakPoints(vector<MisSeg> misseglist,ofstream &out)
+{
+   for(int i=0;i<misseglist.size();i++)
+   {
+      out<<misseglist[i].seg1.begin<<'	'<<misseglist[i].seg1.end<<'	'<<misseglist[i].seg2.begin<<'	'<<misseglist[i].seg2.end<<endl;
+   }
+}
+Chr FindChr(string name)
+{
+   for(int i=0;i<reference.size();i++)
+   {
+      if(reference[i].name==name)
+      {
+         return  reference[i];
+      }
+   }
+   cout<<"the sam file doesn't match fasta file"<<endl;
+   exit(1);
+}
+string  CutRefSeq(int begin,int end,string  chrname,int direction) 
+{
+    Chr chr;
+    string  seq="";
+    int i=0;
+    chr=FindChr(chrname);
+    if(direction==0)
+    {
+       begin=end;
+       end=end+1000;
+    }
+    else
+    {
+       end=begin;
+       if( (begin-1000)>0 )   
+       {
+          begin=(begin-1000);
+       }
+       else
+       {
+          begin=0;
+       }
+    }
+    i=begin;
+    while(i<end&&i<chr.sequence.size())
+    {
+       seq+=chr.sequence[i];
+       i++;
+    }
+    return  seq;
+}
+string CutConSeq(int begin,int end,string sequence)
+{ 
+    string seq="";
+    for(int i=abs(begin-1);i<end;i++)
+    {
+       seq+=sequence[i];
+    }
+    return seq;        
+}
+void FormatOutput(string str,ofstream  &output)
+{
+    string buffer="";
+    for(int i=0;i<str.size();i++)
+    {
+       buffer+=str[i];
+       if(buffer.size()==60)
+       {
+          output<<buffer<<endl;
+          buffer.clear();
+       }
+    }
+    if( (str.size()%60)!=0 )
+    {
+       output<<buffer<<endl;
+    }  
+}
+void OutputSegment(vector<MisSeg>  misseglist,string sequence,string conname,ofstream  &output)
+{
+    string  seq;;
+    string  con;
+    Seg  seg1,seg2;
+    int count=0;
+  //  cout<<misseglist.size()<<endl;
+//    cout<<conname<<endl;
+    for(int i=0;i<misseglist.size();i++)
+    {
+       seg1=misseglist[i].seg1;
+       seg2=misseglist[i].seg2;
+       if(seg2.direction==0)    seg2.direction=1;
+       else
+       {
+          seg2.direction=0;
+       }
+     //  FormatOutput(sequence);
+       if(i>=1)
+       {  
+          seq=CutRefSeq(seg1.refbegin,seg1.refend,seg1.refname,seg1.direction);
+          output<<'>'<<conname<<"_"<<count<<"_b"<<endl;
+          FormatOutput(seq,output);
+          count++;
+       }
+       else
+       {
+          seq=CutConSeq(seg1.begin,seg1.end,sequence);
+          output<<'>'<<conname<<"_"<<count<<endl;
+          FormatOutput(seq,output);
+          seq=CutRefSeq(seg1.refbegin,seg1.refend,seg1.refname,seg1.direction);
+          output<<'>'<<conname<<"_"<<count<<"_b"<<endl;
+          FormatOutput(seq,output);
+          count++;
+       }       
+    //   cout<<i<<endl;
+       seq=CutRefSeq(seg2.refbegin,seg2.refend,seg2.refname,seg2.direction);
+       output<<'>'<<conname<<"_"<<count<<"_f"<<endl;
+       FormatOutput(seq,output);
+       output<<'>'<<conname<<"_"<<count<<endl;
+       seq=CutConSeq(seg2.begin,seg2.end,sequence);
+       FormatOutput(seq,output);
+    //   getchar();
+    } 
+}
+void InferSegment(string sequence,string  conname,ofstream &out,ofstream &output)
+{
+    vector<Seg> sortsegList;
+    vector<Seg> fseglist;
+    vector<MisSeg>  misseglist;
+    int kind=0;
+    for(int i=0;i<tsegmentlist.size();i++)
+    {
+      // if(tsegmentlist[i].segmentlist.size()<2)  continue;
+       for(int j=0;j<tsegmentlist[i].indelseglist.size();j++)
+       {
+          sortsegList.push_back(tsegmentlist[i].indelseglist[j]);
+          
+       }
+       for(int j=0;j<tsegmentlist[i].seglist.size();j++)
+       {
+          sortsegList.push_back(tsegmentlist[i].seglist[j]);
+       }
+    }
+    sort(sortsegList.begin(),sortsegList.end(),a_less_b);
+/*    for(int i=0;i<sortsegList.size();i++)
+    {
+       out<<sortsegList[i].begin<<' '<<sortsegList[i].end<<endl;
+       out<<sortsegList[i].refbegin<<' '<<sortsegList[i].refend<<endl;
+       out<<sortsegList[i].quality<<endl;
+       out<<endl;
+       
+       //getchar();
+    }
+*/
+    for(int i=0;i<sortsegList.size();i++)
+    {
+       sortsegList[i].kind=0;
+    }
+    for(int i=0;i<sortsegList.size();i++)
+    {
+       if(sortsegList[i].kind==0)
+       {
+          kind++;
+          sortsegList[i].kind=kind; 
+       }
+       else    continue;
+       for(int j=i+1;j<sortsegList.size();j++)
+       {
+          sortsegList[j].kind=ClassifySeg(sortsegList[i],sortsegList[j]);
+       }
+    }
+    if(kind>1) 
+    {
+       fseglist=MergeSeg(sortsegList,kind);
+       misseglist=JudgeMis(fseglist);
+       FormatOutputBreakPoints(misseglist,out);
+       OutputSegment(misseglist,sequence,conname,output);
+    }
+    misseglist.clear();
+    tsegmentlist.clear();
+}
+void getCfile(ifstream  &c,ofstream  &out,ofstream  &output)															
+{
+    Contig  contig;
+    subContig  subcontig; 
+    string  buffer;
+    string  name;  
+    vector<string>  data; 
+    string  sequence;
+    while(c.good())
+    {
+       getline(c,buffer);
+       if(buffer[0]!='@'&&buffer!="")
+       {
+          data=split(buffer,"	");
+        //  cout<<data[0]<<endl; 
+          if(data[2]=="*")
+          {
+              continue;
+          }
+          if(data[0]!=contig.name)
+          {
+             if(contig.name!="")
+             {
+                //contiglist.push_back(contig);
+              //  judgeMis(contig);   
+                if(tsegmentlist.size()>0)   
+                {
+                   out<<'>'<<contig.name<<endl;
+                   InferSegment(sequence,contig.name,out,output);
+                }
+                ClearContig(contig);
+             }
+             contig.name=data[0];
+             sequence=data[9];
+          }
+       //   cout<<data[5]<<endl;
+          ConvertCigar(data[5]);
+          CalcuCigarInfo(data);
+  //        AssignSubContig(subcontig,data);
+
+   //       contig.subContigList.push_back(subcontig);
+   //       ClearSubContig(subcontig);
+          data.clear();         
+       }
+       
+    }
+}
+int main(int argc,char *argv[])
+{
+    ifstream  f(argv[1]);//contig file
+    ifstream  c(argv[2]);//sam file
+    ofstream  out(argv[3]);
+    ofstream  output(argv[4]);
+   // ifstream  mis(argv[3]);
+  //  ifstream  split(argv[4]);
+    //test();
+    if(f.is_open())
+    {
+       getFfile(f);
+  //     cout<<reference[0].sequence.length()<<endl;
+   //    getchar(); 
+    }
+    if(c.is_open())
+    {
+       getCfile(c,out,output);
+       cout<<"sam file loaded"<<endl;
+       cout<<COUNT<<endl;
+    }
+    
+}
+  
