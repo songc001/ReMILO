@@ -31,18 +31,18 @@ short_read2_path=args.short_read2_path
 
 if args.insert:
         if args.insert > 128 or args.insert < 1:
-        	print 'ERROR: argument -i/insert should be between 1 and 128'
+        	print 'ERROR: Argument -i/insert should be between 1 and 128'
         	exit(-1)
 if args.kmer > 127 or args.kmer < 4:
-	print 'ERROR: argument -k/--kmer should be between 4 and 127'
+	print 'ERROR: Argument -k/--kmer should be between 4 and 127'
 	exit(-1)
 if args.distance:
         if args.distance>65535 or args.distance < 1:
-        	print 'ERROR: argument -d/--distance should be between 1 and 65535'
+        	print 'ERROR: Argument -d/--distance should be between 1 and 65535'
         	exit(-1)
 if args.coverage:
 	if args.coverage > 65535 or args.coverage < 1:
-		print 'ERROR: argument -c/--coverage should be between 1 and 65535'
+		print 'ERROR: Argument -c/--coverage should be between 1 and 65535'
 		exit(-1)
 if args.longread:
 	longread_path = args.longread
@@ -65,7 +65,7 @@ if not os.path.exists(temp_dir):
 
 
 if os.path.exists(output_dir + '/ref'):
-	print 'ERROR: ' + output_dir + '/ref' + ' already exist, please delete it before running ref'
+	print 'ERROR: ' + output_dir + '/ref' + ' already exists, please delete it before running processRefGenome'
 	exit(-1)
 else:
 	os.mkdir(output_dir + '/ref')
@@ -112,7 +112,7 @@ if not os.path.exists(temp_dir):
        os.makedirs(temp_dir)
 
 if os.path.exists(output_dir + '/short'):
-       print 'ERROR: ' + output_dir + '/ref' + ' already exist, please delete it before running ref '
+       print 'ERROR: ' + output_dir + '/short' + ' already exists, please delete it before running processShortReads '
        exit(-1)
 else:
        os.mkdir(output_dir + '/short')
@@ -167,7 +167,7 @@ if args.longread:
              os.makedirs(temp_dir)
 
       if os.path.exists(output_dir + '/long'):
-             print 'ERROR: ' + output_dir + '/long' + ' already exist, please delete it before running ref'
+             print 'ERROR: ' + output_dir + '/long' + ' already exists, please delete it before running processLongReads'
              exit(-1)
       else:
              os.mkdir(output_dir + '/long')
